@@ -1,0 +1,16 @@
+[package]
+name = "dice-bot"
+version = "0.0.1"
+authors = ["Lokathor <zefria@gmail.com>"]
+repository = "https://github.com/Lokathor/dice-bot-rs"
+readme = "README.md"
+keywords = ["discord","dice"]
+description = "A discord bot to roll RPG dice rolls."
+license = "0BSD"
+publish = false
+
+autobins = false
+
+[dependencies]
+serenity = "0.5"
+randomize = "0.890"
