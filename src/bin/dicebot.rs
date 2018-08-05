@@ -43,19 +43,11 @@ fn main() {
       .simple_bucket("help", 30)
       .command("echo", |c| c.check(owner_check).cmd(echo).desc("Admin-only echo test"))
       .command("as", |c| {
-        c.cmd(after_sundown)
-          .desc("Rolls After Sundown style (max of 5 rolls)")
-          .usage("[DICE_COUNT] [...]")
+        c.cmd(after_sundown).desc("Rolls After Sundown style").usage("[DICE_COUNT] [...]")
       })
-      .command("sr", |c| {
-        c.cmd(shadowrun)
-          .desc("Rolls Shadowrun 4e style (max of 5 rolls)")
-          .usage("[DICE_COUNT] [...]")
-      })
+      .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style").usage("[DICE_COUNT] [...]"))
       .command("dice", |c| {
-        c.cmd(dice)
-          .desc("Rolls a standard dice expression (max of 5 rolls)")
-          .usage("[DICE_EXPRESSION] [...]")
+        c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
       })
       .help(help_commands::with_embeds),
   );
@@ -129,7 +121,97 @@ command!(shadowrun(_ctx, msg, args) {
 
 command!(dice(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
-  for arg_str in args.iter::<&str>().take(5) {
-
+  'exprloop: for dice_expression_str in args.full().split_whitespace().take(5) {
+    let mut plus_only_form = dice_expression_str.replace("-","+-");
+    let mut total: i32 = 0;
+    let mut sub_expressions = vec![];
+    for sub_expression in plus_only_form.split('+').take(7) {
+      if sub_expression.len() == 0 {
+        continue;
+      }
+      let mut d_iter = sub_expression.split('d');
+      let num_dice: i32 = match d_iter.next() {
+        Some(num_dice_str) => {
+          if num_dice_str.len() > 0 {
+            match num_dice_str.parse::<i32>() {
+              Ok(num) => num.max(-5_000).min(5_000),
+              Err(_) => {
+                msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+                continue 'exprloop;
+              }
+            }
+          } else {
+            1
+          }
+        }
+        None => {
+          msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+          continue 'exprloop;
+        }
+      };
+      let num_sides: u32 = match d_iter.next() {
+        Some(num_sides_str) => {
+          match num_sides_str.parse::<u32>() {
+            Ok(num) => num.min(4_000_000),
+            Err(_) => {
+              msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+              continue 'exprloop;
+            }
+          }
+        }
+        None => {
+          1
+        }
+      };
+      if d_iter.next().is_some() {
+        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        continue 'exprloop;
+      }
+      if num_sides == 0 {
+        // do nothing with 0-sided dice
+      } else if num_sides == 1 {
+        total += num_dice;
+        sub_expressions.push(format!("{}", num_dice));
+      } else {
+        let range = match num_sides {
+          4 => d4,
+          6 => d6,
+          8 => d8,
+          10 => d10,
+          12 => d12,
+          20 => d20,
+          _ => RandRangeInclusive32::new(1,num_sides)
+        };
+        if num_dice > 0 {
+          for _ in 0 .. num_dice {
+            total += range.sample_with(gen) as i32;
+          }
+          sub_expressions.push(format!("{}d{}", num_dice, num_sides));
+        } else if num_dice < 0 {
+          for _ in 0 .. num_dice.abs() {
+            total -= range.sample_with(gen) as i32;
+          }
+          sub_expressions.push(format!("{}d{}", num_dice, num_sides));
+        }
+        // do nothing if num_dice == 0
+      }
+    }
+    if sub_expressions.len() > 0 {
+      let mut parsed_string = sub_expressions[0].clone();
+      for sub_expression in sub_expressions.into_iter().skip(1) {
+        if sub_expression.chars().nth(0) == Some('-') {
+          parsed_string.push_str(&sub_expression);
+        } else {
+          parsed_string.push('+');
+          parsed_string.push_str(&sub_expression);
+        }
+      }
+      let output = format!("Rolled {}: {}",parsed_string, total);
+      if let Err(why) = msg.channel_id.say(output) {
+        println!("Error sending message: {:?}", why);
+      }
+    } else {
+      msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+    }
   }
 });
