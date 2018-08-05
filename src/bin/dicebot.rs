@@ -70,8 +70,9 @@ command!(after_sundown(_ctx, msg, args) {
   for arg in args.iter::<u32>().take(5) {
     match arg {
       Ok(dice_count) => {
+        let dice_count = dice_count.min(5_000);
         let mut hits = 0;
-        for _ in 0 .. dice_count.min(5_000) {
+        for _ in 0 .. dice_count {
           if d6.sample_with(gen) > 4 {
             hits += 1;
           }
@@ -92,9 +93,10 @@ command!(shadowrun(_ctx, msg, args) {
   for arg in args.iter::<u32>().take(5) {
     match arg {
       Ok(dice_count) => {
+        let dice_count = dice_count.min(5_000);
         let mut hits = 0;
         let mut ones = 0;
-        for _ in 0 .. dice_count.min(5_000) {
+        for _ in 0 .. dice_count {
           let roll = d6.sample_with(gen);
           if roll == 1 {
             ones += 1;
