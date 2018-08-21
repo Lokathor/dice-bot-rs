@@ -40,15 +40,19 @@ fn main() {
           .delimiter(" ")
           .case_insensitivity(true)
       })
-      .simple_bucket("help", 30)
-      .command("echo", |c| c.check(owner_check).cmd(echo).desc("Admin-only echo test"))
       .command("as", |c| {
         c.cmd(after_sundown).desc("Rolls After Sundown style").usage("[DICE_COUNT] [...]")
       })
       .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style").usage("[DICE_COUNT] [...]"))
+      .command("sre", |c| {
+        c.cmd(shadowrun)
+          .desc("Rolls Shadowrun 4e+Edge style (6-again)")
+          .usage("[DICE_COUNT] [...]")
+      })
       .command("dice", |c| {
         c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
       })
+      .simple_bucket("help", 30)
       .help(help_commands::with_embeds),
   );
 
@@ -57,6 +61,7 @@ fn main() {
   }
 }
 
+#[allow(dead_code)]
 fn owner_check(_: &mut Context, msg: &Message, _: &mut Args, _: &CommandOptions) -> bool {
   msg.author.id == LOKATHOR_ID
 }
@@ -103,6 +108,44 @@ command!(shadowrun(_ctx, msg, args) {
           } else if roll > 4 {
             hits += 1;
           }
+        }
+        let is_glitch = ones >= (dice_count+1) / 2;
+        let output = format!("Rolled {} dice: {}{} hit{}", dice_count, match (hits, is_glitch) {
+          (0, true) => "CRITICAL GLITCH, ",
+          (_, true) => "GLITCH, ",
+          _ => "",
+        }, hits, if hits != 1 {"s"} else {""});
+        if let Err(why) = msg.channel_id.say(output) {
+          println!("Error sending message: {:?}", why);
+        }
+      },
+      Err(_) => {
+        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+      }
+    }
+  }
+});
+
+command!(shadowrun_edge(_ctx, msg, args) {
+  let gen: &mut PCG32 = &mut get_global_generator();
+  for arg in args.iter::<u32>().take(5) {
+    match arg {
+      Ok(dice_count) => {
+        let dice_count = dice_count.min(5_000);
+        let mut hits = 0;
+        let mut ones = 0;
+        let mut dice_rolled = 0;
+        while dice_rolled < dice_count {
+          let roll = d6.sample_with(gen);
+          if roll == 1 {
+            ones += 1;
+          } else if roll > 4 {
+            hits += 1;
+            if roll == 6 {
+              continue;
+            }
+          }
+          dice_rolled += 1;
         }
         let is_glitch = ones >= (dice_count+1) / 2;
         let output = format!("Rolled {} dice: {}{} hit{}", dice_count, match (hits, is_glitch) {
