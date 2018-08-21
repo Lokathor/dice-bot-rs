@@ -19,7 +19,7 @@ pub struct Handler;
 
 impl EventHandler for Handler {
   fn ready(&self, _: Context, ready: Ready) {
-    println!("{} is connected!", ready.user.name);
+    println!("{} is connected (version 2018-08-20-23:53)!", ready.user.name);
   }
 }
 
