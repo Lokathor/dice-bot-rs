@@ -148,7 +148,7 @@ command!(shadowrun_edge(_ctx, msg, args) {
           dice_rolled += 1;
         }
         let is_glitch = ones >= (dice_count+1) / 2;
-        let output = format!("Rolled {} dice: {}{} hit{}", dice_count, match (hits, is_glitch) {
+        let output = format!("Rolled {} dice with 6-again: {}{} hit{}", dice_count, match (hits, is_glitch) {
           (0, true) => "CRITICAL GLITCH, ",
           (_, true) => "GLITCH, ",
           _ => "",
