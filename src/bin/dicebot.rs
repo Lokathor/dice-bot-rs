@@ -49,6 +49,7 @@ fn main() {
           .desc("Rolls Shadowrun 4e+Edge style (6-again)")
           .usage("[DICE_COUNT] [...]")
       })
+      .command("ed", |c| c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step").usage("[DICE_COUNT] [...]"))
       .command("dice", |c| {
         c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
       })
@@ -65,10 +66,6 @@ fn main() {
 fn owner_check(_: &mut Context, msg: &Message, _: &mut Args, _: &CommandOptions) -> bool {
   msg.author.id == LOKATHOR_ID
 }
-
-command!(echo(_ctx, msg, args) {
-  msg.channel_id.say(format!("{}",args.full())).ok();
-});
 
 command!(after_sundown(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
@@ -214,6 +211,25 @@ command!(shadowrun_edge(_ctx, msg, args) {
   }
 });
 
+command!(earthdawn(_ctx, msg, args) {
+  let gen: &mut PCG32 = &mut get_global_generator();
+  for arg in args.iter::<u32>().take(5) {
+    match arg {
+      Ok(step_value) => {
+        let step_value = step_value as i32;
+        let step_roll = step(gen, step_value);
+        let output = format!("Rolled step {}: {}", step_value, step_roll);
+        if let Err(why) = msg.channel_id.say(output) {
+          println!("Error sending message: {:?}", why);
+        }
+      },
+      Err(_) => {
+        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+      }
+    }
+  }
+});
+
 command!(dice(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
   'exprloop: for dice_expression_str in args.full().split_whitespace().take(5) {
@@ -310,3 +326,51 @@ command!(dice(_ctx, msg, args) {
     }
   }
 });
+
+trait ExplodingRange {
+  fn explode(&self, &mut PCG32) -> u32;
+}
+
+impl ExplodingRange for RandRangeInclusive32 {
+  fn explode(&self, gen: &mut PCG32) -> u32 {
+    let mut times = 0;
+    loop {
+      let roll = self.sample_with(gen);
+      if roll == self.high() {
+        times += 1;
+        continue;
+      } else {
+        return self.high() * times + roll;
+      }
+    }
+  }
+}
+
+/// Rolls a step roll, according to the 4th edition chart.
+pub fn step(gen: &mut PCG32, mut step: i32) -> i32 {
+  if step < 1 {
+    0
+  } else {
+    let mut total = 0;
+    while step > 13 {
+      total += d12.explode(gen);
+      step -= 7;
+    }
+    (total + match step {
+      1 => (d4.explode(gen) as i32 - 2).max(1) as u32,
+      2 => (d4.explode(gen) as i32 - 1).max(1) as u32,
+      3 => d4.explode(gen),
+      4 => d6.explode(gen),
+      5 => d8.explode(gen),
+      6 => d10.explode(gen),
+      7 => d12.explode(gen),
+      8 => d6.explode(gen) + d6.explode(gen),
+      9 => d8.explode(gen) + d6.explode(gen),
+      10 => d8.explode(gen) + d8.explode(gen),
+      11 => d10.explode(gen) + d8.explode(gen),
+      12 => d10.explode(gen) + d10.explode(gen),
+      13 => d12.explode(gen) + d10.explode(gen),
+      _other => unreachable!(),
+    }) as i32
+  }
+}
