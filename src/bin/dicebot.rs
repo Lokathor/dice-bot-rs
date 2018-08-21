@@ -77,12 +77,27 @@ command!(after_sundown(_ctx, msg, args) {
       Ok(dice_count) => {
         let dice_count = dice_count.min(5_000);
         let mut hits = 0;
+        const DICE_REPORT_MAXIMUM: u32 = 30;
+        let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
+        dice_record.push(' ');
+        dice_record.push('`');
+        dice_record.push('(');
         for _ in 0 .. dice_count {
-          if d6.sample_with(gen) > 4 {
+          let roll = d6.sample_with(gen);
+          if roll >= 5 {
             hits += 1;
           }
+          if dice_count < DICE_REPORT_MAXIMUM {
+            dice_record.push(('0' as u8 + roll as u8) as char);
+            dice_record.push(',');
+          }
         }
-        if let Err(why) = msg.channel_id.say(format!("Rolled {} dice, got {} hit{}", dice_count, hits, if hits != 1 {"s"} else {""})) {
+        dice_record.push(')');
+        dice_record.push('`');
+        let s_for_hits = if hits != 1 {"s"} else {""};
+        let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
+        let output = format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output);
+        if let Err(why) = msg.channel_id.say(output) {
           println!("Error sending message: {:?}", why);
         }
       },
@@ -105,7 +120,7 @@ command!(shadowrun(_ctx, msg, args) {
           let roll = d6.sample_with(gen);
           if roll == 1 {
             ones += 1;
-          } else if roll > 4 {
+          } else if roll >= 5 {
             hits += 1;
           }
         }
