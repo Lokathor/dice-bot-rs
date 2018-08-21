@@ -45,7 +45,7 @@ fn main() {
       })
       .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style").usage("[DICE_COUNT] [...]"))
       .command("sre", |c| {
-        c.cmd(shadowrun)
+        c.cmd(shadowrun_edge)
           .desc("Rolls Shadowrun 4e+Edge style (6-again)")
           .usage("[DICE_COUNT] [...]")
       })
