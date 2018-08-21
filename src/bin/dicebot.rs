@@ -202,7 +202,7 @@ command!(shadowrun_edge(_ctx, msg, args) {
         };
         let s_for_hits = if hits != 1 {"s"} else {""};
         let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
-        let output = format!("Rolled {} dice: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
+        let output = format!("Rolled {} dice with 6-again: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
         if let Err(why) = msg.channel_id.say(output) {
           println!("Error sending message: {:?}", why);
         }
