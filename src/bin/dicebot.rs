@@ -19,7 +19,7 @@ pub struct Handler;
 
 impl EventHandler for Handler {
   fn ready(&self, _: Context, ready: Ready) {
-    println!("{} is connected (version 2018-08-20-23:53)!", ready.user.name);
+    println!("{} is connected!", ready.user.name);
   }
 }
 
@@ -92,6 +92,7 @@ command!(after_sundown(_ctx, msg, args) {
             dice_record.push(',');
           }
         }
+        dice_record.pop();
         dice_record.push(')');
         dice_record.push('`');
         let s_for_hits = if hits != 1 {"s"} else {""};
@@ -116,6 +117,11 @@ command!(shadowrun(_ctx, msg, args) {
         let dice_count = dice_count.min(5_000);
         let mut hits = 0;
         let mut ones = 0;
+        const DICE_REPORT_MAXIMUM: u32 = 30;
+        let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
+        dice_record.push(' ');
+        dice_record.push('`');
+        dice_record.push('(');
         for _ in 0 .. dice_count {
           let roll = d6.sample_with(gen);
           if roll == 1 {
@@ -123,13 +129,23 @@ command!(shadowrun(_ctx, msg, args) {
           } else if roll >= 5 {
             hits += 1;
           }
+          if dice_count < DICE_REPORT_MAXIMUM {
+            dice_record.push(('0' as u8 + roll as u8) as char);
+            dice_record.push(',');
+          }
         }
+        dice_record.pop();
+        dice_record.push(')');
+        dice_record.push('`');
         let is_glitch = ones >= (dice_count+1) / 2;
-        let output = format!("Rolled {} dice: {}{} hit{}", dice_count, match (hits, is_glitch) {
+        let glitch_string = match (hits, is_glitch) {
           (0, true) => "CRITICAL GLITCH, ",
           (_, true) => "GLITCH, ",
           _ => "",
-        }, hits, if hits != 1 {"s"} else {""});
+        };
+        let s_for_hits = if hits != 1 {"s"} else {""};
+        let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
+        let output = format!("Rolled {} dice: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
         if let Err(why) = msg.channel_id.say(output) {
           println!("Error sending message: {:?}", why);
         }
@@ -150,24 +166,43 @@ command!(shadowrun_edge(_ctx, msg, args) {
         let mut hits = 0;
         let mut ones = 0;
         let mut dice_rolled = 0;
+        const DICE_REPORT_MAXIMUM: u32 = 30;
+        let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
+        dice_record.push(' ');
+        dice_record.push('`');
+        dice_record.push('(');
+        let mut this_is_a_normal_roll = true;
         while dice_rolled < dice_count {
           let roll = d6.sample_with(gen);
-          if roll == 1 {
+          if roll == 1 && this_is_a_normal_roll {
             ones += 1;
-          } else if roll > 4 {
+          } else if roll >= 5 {
             hits += 1;
-            if roll == 6 {
-              continue;
-            }
           }
-          dice_rolled += 1;
+          if dice_count < DICE_REPORT_MAXIMUM {
+            dice_record.push(('0' as u8 + roll as u8) as char);
+            dice_record.push(',');
+          }
+          if roll == 6 {
+            // setup the next pass to be a bonus die
+            this_is_a_normal_roll = false;
+          } else {
+            dice_rolled += 1;
+            this_is_a_normal_roll = true;
+          }
         }
+        dice_record.pop();
+        dice_record.push(')');
+        dice_record.push('`');
         let is_glitch = ones >= (dice_count+1) / 2;
-        let output = format!("Rolled {} dice with 6-again: {}{} hit{}", dice_count, match (hits, is_glitch) {
+        let glitch_string = match (hits, is_glitch) {
           (0, true) => "CRITICAL GLITCH, ",
           (_, true) => "GLITCH, ",
           _ => "",
-        }, hits, if hits != 1 {"s"} else {""});
+        };
+        let s_for_hits = if hits != 1 {"s"} else {""};
+        let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
+        let output = format!("Rolled {} dice: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
         if let Err(why) = msg.channel_id.say(output) {
           println!("Error sending message: {:?}", why);
         }
