@@ -11,8 +11,8 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::UserId;
 use serenity::prelude::*;
 
-pub const EMOJI_CHECK: &str = "☑";
-pub const EMOJI_QUESTION: &str = "❓";
+//pub const EMOJI_CHECK: &str = "☑";
+//pub const EMOJI_QUESTION: &str = "❓";
 pub const LOKATHOR_ID: UserId = UserId(244106113321140224);
 
 pub(crate) fn basic_sum_str(s: &str) -> Option<i32> {
@@ -183,7 +183,7 @@ command!(after_sundown(_ctx, msg, args) {
         }
       },
       None => {
-        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
       }
     }
   }
@@ -238,7 +238,7 @@ command!(shadowrun(_ctx, msg, args) {
         }
       },
       None => {
-        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
       }
     }
   }
@@ -302,7 +302,7 @@ command!(shadowrun_edge(_ctx, msg, args) {
         }
       },
       None => {
-        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
       }
     }
   }
@@ -320,7 +320,7 @@ command!(earthdawn(_ctx, msg, args) {
         }
       },
       None => {
-        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
       }
     }
   }
@@ -343,7 +343,7 @@ command!(dice(_ctx, msg, args) {
             match num_dice_str.parse::<i32>() {
               Ok(num) => num.max(-5_000).min(5_000),
               Err(_) => {
-                msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+                //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
                 continue 'exprloop;
               }
             }
@@ -352,7 +352,7 @@ command!(dice(_ctx, msg, args) {
           }
         }
         None => {
-          msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+          //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
           continue 'exprloop;
         }
       };
@@ -361,7 +361,7 @@ command!(dice(_ctx, msg, args) {
           match num_sides_str.parse::<u32>() {
             Ok(num) => num.min(4_000_000),
             Err(_) => {
-              msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+              //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
               continue 'exprloop;
             }
           }
@@ -371,7 +371,7 @@ command!(dice(_ctx, msg, args) {
         }
       };
       if d_iter.next().is_some() {
-        msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
         continue 'exprloop;
       }
       if num_sides == 0 {
@@ -418,7 +418,7 @@ command!(dice(_ctx, msg, args) {
         println!("Error sending message: {:?}", why);
       }
     } else {
-      msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+      //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
     }
   }
 });
