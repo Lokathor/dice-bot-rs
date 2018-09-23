@@ -12,3 +12,6 @@ publish = false
 [dependencies]
 serenity = "0.5"
 randomize = "0.890"
+
+[profile.release]
+lto = true
