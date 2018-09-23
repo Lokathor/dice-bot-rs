@@ -11,85 +11,11 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::UserId;
 use serenity::prelude::*;
 
-//pub const EMOJI_CHECK: &str = "☑";
-//pub const EMOJI_QUESTION: &str = "❓";
+extern crate dice_bot;
+use dice_bot::shadowrun::*;
+use dice_bot::*;
+
 pub const LOKATHOR_ID: UserId = UserId(244106113321140224);
-
-pub(crate) fn basic_sum_str(s: &str) -> Option<i32> {
-  if s.len() == 0 {
-    return None;
-  }
-  let mut total = 0;
-  let mut current = 0;
-  let mut current_is_negative = s.chars().nth(0).unwrap() == '-';
-  for ch in s.chars() {
-    match ch {
-      '0' => {
-        current *= 10;
-      }
-      '1' => {
-        current *= 10;
-        current += 1
-      }
-      '2' => {
-        current *= 10;
-        current += 2
-      }
-      '3' => {
-        current *= 10;
-        current += 3
-      }
-      '4' => {
-        current *= 10;
-        current += 4
-      }
-      '5' => {
-        current *= 10;
-        current += 5
-      }
-      '6' => {
-        current *= 10;
-        current += 6
-      }
-      '7' => {
-        current *= 10;
-        current += 7
-      }
-      '8' => {
-        current *= 10;
-        current += 8
-      }
-      '9' => {
-        current *= 10;
-        current += 9
-      }
-      '+' => {
-        total += if current_is_negative { -current } else { current };
-        current = 0;
-        current_is_negative = false;
-      }
-      '-' => {
-        total += if current_is_negative { -current } else { current };
-        current = 0;
-        current_is_negative = true;
-      }
-      _ => return None,
-    };
-  }
-  total += if current_is_negative { -current } else { current };
-  Some(total)
-}
-
-#[test]
-fn basic_sum_str_test() {
-  assert_eq!(basic_sum_str("1"), Some(1));
-  assert_eq!(basic_sum_str("12"), Some(12));
-  assert_eq!(basic_sum_str("4+5"), Some(9));
-  assert_eq!(basic_sum_str("8-2"), Some(6));
-  assert_eq!(basic_sum_str("abc"), None);
-  assert_eq!(basic_sum_str("-2"), Some(-2));
-  assert_eq!(basic_sum_str("-2+7"), Some(5));
-}
 
 pub struct Handler;
 
@@ -138,11 +64,6 @@ fn main() {
   }
 }
 
-#[allow(dead_code)]
-fn owner_check(_: &mut Context, msg: &Message, _: &mut Args, _: &CommandOptions) -> bool {
-  msg.author.id == LOKATHOR_ID
-}
-
 command!(after_sundown(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
   for arg in args.full().split_whitespace().take(5).map(basic_sum_str) {
@@ -172,125 +93,6 @@ command!(after_sundown(_ctx, msg, args) {
           let s_for_hits = if hits != 1 {"s"} else {""};
           let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
           let output = format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output);
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
-        } else {
-          let output = format!("No dice to roll!");
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
-        }
-      },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
-      }
-    }
-  }
-});
-
-command!(shadowrun(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
-  for arg in args.full().split_whitespace().take(5).map(basic_sum_str) {
-    match arg {
-      Some(dice_count) => {
-        let dice_count = dice_count.max(0).min(5_000) as u32;
-        if dice_count > 0 {
-          let mut hits = 0;
-          let mut ones = 0;
-          const DICE_REPORT_MAXIMUM: u32 = 30;
-          let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
-          dice_record.push(' ');
-          dice_record.push('`');
-          dice_record.push('(');
-          for _ in 0 .. dice_count {
-            let roll = d6.sample_with(gen);
-            if roll == 1 {
-              ones += 1;
-            } else if roll >= 5 {
-              hits += 1;
-            }
-            if dice_count < DICE_REPORT_MAXIMUM {
-              dice_record.push(('0' as u8 + roll as u8) as char);
-              dice_record.push(',');
-            }
-          }
-          dice_record.pop();
-          dice_record.push(')');
-          dice_record.push('`');
-          let is_glitch = ones >= (dice_count+1) / 2;
-          let glitch_string = match (hits, is_glitch) {
-            (0, true) => "CRITICAL GLITCH, ",
-            (_, true) => "GLITCH, ",
-            _ => "",
-          };
-          let s_for_hits = if hits != 1 {"s"} else {""};
-          let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
-          let output = format!("Rolled {} dice: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
-        } else {
-          let output = format!("No dice to roll!");
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
-        }
-      },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
-      }
-    }
-  }
-});
-
-command!(shadowrun_edge(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
-  for arg in args.full().split_whitespace().take(5).map(basic_sum_str) {
-    match arg {
-      Some(dice_count) => {
-        let dice_count = dice_count.max(0).min(5_000) as u32;
-        if dice_count > 0 {
-          let mut hits = 0;
-          let mut ones = 0;
-          let mut dice_rolled = 0;
-          const DICE_REPORT_MAXIMUM: u32 = 30;
-          let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
-          dice_record.push(' ');
-          dice_record.push('`');
-          dice_record.push('(');
-          let mut this_is_a_normal_roll = true;
-          while dice_rolled < dice_count {
-            let roll = d6.sample_with(gen);
-            if roll == 1 && this_is_a_normal_roll {
-              ones += 1;
-            } else if roll >= 5 {
-              hits += 1;
-            }
-            if dice_count < DICE_REPORT_MAXIMUM {
-              dice_record.push(('0' as u8 + roll as u8) as char);
-              dice_record.push(',');
-            }
-            if roll == 6 {
-              // setup the next pass to be a bonus die
-              this_is_a_normal_roll = false;
-            } else {
-              dice_rolled += 1;
-              this_is_a_normal_roll = true;
-            }
-          }
-          dice_record.pop();
-          dice_record.push(')');
-          dice_record.push('`');
-          let is_glitch = ones >= (dice_count+1) / 2;
-          let glitch_string = match (hits, is_glitch) {
-            (0, true) => "CRITICAL GLITCH, ",
-            (_, true) => "GLITCH, ",
-            _ => "",
-          };
-          let s_for_hits = if hits != 1 {"s"} else {""};
-          let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
-          let output = format!("Rolled {} dice with 6-again: {}{} hit{}{}", dice_count, glitch_string, hits, s_for_hits, dice_report_output);
           if let Err(why) = msg.channel_id.say(output) {
             println!("Error sending message: {:?}", why);
           }

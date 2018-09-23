@@ -9,8 +9,6 @@ description = "A discord bot to roll RPG dice rolls."
 license = "0BSD"
 publish = false
 
-autobins = false
-
 [dependencies]
 serenity = "0.5"
 randomize = "0.890"
