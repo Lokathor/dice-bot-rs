@@ -54,20 +54,6 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
       is_glitch: ones >= (pool_size + 1) / 2,
       roll_list: if dice_record.len() > 0 { Some(dice_record) } else { None },
     }
-    /*
-    let is_glitch = ones >= (pool_size + 1) / 2;
-    let s_for_hits = if hits != 1 { "s" } else { "" };
-    //
-    dice_record.pop();
-    dice_record.push(')');
-    dice_record.push('`');
-    //
-    let dice_report_output = if pool_size < SR_POOL_MAX_REPORT { &dice_record } else { "" };
-    format!(
-      "Rolled {} dice: {}{} hit{}{}",
-      pool_size, glitch_string, hits, s_for_hits, dice_report_output
-    )
-    */
   }
 }
 
@@ -85,13 +71,13 @@ command!(shadowrun(_ctx, msg, args) {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
               let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push('`');
+              report.push_str(" `(");
               for roll in roll_vec {
-                report.push((roll - ('0' as u8)) as char);
+                report.push((b'0' + roll) as char);
                 report.push(',');
               }
               report.pop();
-              report.push('`');
+              report.push_str(")`");
               report
             } else {
               "".to_string()
@@ -132,13 +118,13 @@ command!(shadowrun_edge(_ctx, msg, args) {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
               let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push('`');
+              report.push_str(" `(");
               for roll in roll_vec {
-                report.push((roll - ('0' as u8)) as char);
+                report.push((b'0' + roll) as char);
                 report.push(',');
               }
               report.pop();
-              report.push('`');
+              report.push_str(")`");
               report
             } else {
               "".to_string()
@@ -185,13 +171,13 @@ command!(shadowrun_friend(_ctx, msg, args) {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
               let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push('`');
+              report.push_str(" `(");
               for roll in roll_vec {
-                report.push((roll - ('0' as u8)) as char);
+                report.push((b'0' + roll) as char);
                 report.push(',');
               }
               report.pop();
-              report.push('`');
+              report.push_str(")`");
               report
             } else {
               "".to_string()
@@ -216,13 +202,13 @@ command!(shadowrun_friend(_ctx, msg, args) {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
               let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push('`');
+              report.push_str(" `(");
               for roll in roll_vec {
-                report.push((roll - ('0' as u8)) as char);
+                report.push((b'0' + roll) as char);
                 report.push(',');
               }
               report.pop();
-              report.push('`');
+              report.push_str(")`");
               report
             } else {
               "".to_string()
@@ -230,9 +216,9 @@ command!(shadowrun_friend(_ctx, msg, args) {
           },
           None => "".to_string(),
         };
-        let services_owed = (conjure_hits - pool_output.hits_total).max(0);
+        let services_owed = (conjure_hits as i32 - pool_output.hits_total as i32).max(0);
         output.push_str(&format!(
-          "Your friend rolled {} dice to resist: {}{} hit{} ({} services owed) {}",
+          "Your friend rolled {} dice to resist: {}{} hit{} ({} services owed){}",
           dice_count, glitch_string_output, hits, s_for_hits, services_owed, dice_report_output
         ));
         output.push('\n');
@@ -247,13 +233,13 @@ command!(shadowrun_friend(_ctx, msg, args) {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
               let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push('`');
+              report.push_str(" `(");
               for roll in roll_vec {
-                report.push((roll - ('0' as u8)) as char);
+                report.push((b'0' + roll) as char);
                 report.push(',');
               }
               report.pop();
-              report.push('`');
+              report.push_str(")`");
               report
             } else {
               "".to_string()
@@ -263,7 +249,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
         };
         let net_drain = ((force/2 + force_hits) - pool_output.hits_total).max(0);
         output.push_str(&format!(
-          "You rolled {} dice to soak drain: {}{} hit{} ({} net drain) {}",
+          "You rolled {} dice to soak drain: {}{} hit{} ({} net drain){}",
           dice_count, glitch_string_output, hits, s_for_hits, net_drain, dice_report_output
         ));
       }
