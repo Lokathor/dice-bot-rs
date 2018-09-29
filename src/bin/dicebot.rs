@@ -51,6 +51,11 @@ fn main() {
           .desc("Rolls Shadowrun 4e+Edge style (6-again)")
           .usage("[DICE_COUNT] [...]")
       })
+      .command("friend", |c| {
+        c.cmd(shadowrun_friend)
+          .desc("Rolls up a conjured buddy (Spirit / Sprite)")
+          .usage("[CONJURE] [FORCE] [SOAK]")
+      })
       .command("ed", |c| c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step").usage("[DICE_COUNT] [...]"))
       .command("dice", |c| {
         c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
