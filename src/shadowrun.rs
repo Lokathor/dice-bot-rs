@@ -217,9 +217,10 @@ command!(shadowrun_friend(_ctx, msg, args) {
           None => "".to_string(),
         };
         let services_owed = (conjure_hits as i32 - pool_output.hits_total as i32).max(0);
+        let s_for_services_owed = if services_owed != 1 { "s" } else { "" };
         output.push_str(&format!(
-          "Your friend rolled {} dice to resist: {}{} hit{} ({} services owed){}",
-          dice_count, glitch_string_output, hits, s_for_hits, services_owed, dice_report_output
+          "Your friend rolled {} dice to resist: {}{} hit{} ({} service{} owed){}",
+          dice_count, glitch_string_output, hits, s_for_hits, services_owed, s_for_services_owed, dice_report_output
         ));
         output.push('\n');
         let force_hits = pool_output.hits_total;
