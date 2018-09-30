@@ -57,7 +57,7 @@ fn main() {
           .usage("[CONJURE] [FORCE] [SOAK]")
       })
       .command("foe", |c| {
-        c.cmd(shadowrun_friend)
+        c.cmd(shadowrun_foe)
           .desc("Binds a conjured buddy (Spirit / Sprite)")
           .usage("[BINDING] [FORCE] [SOAK]")
       })
