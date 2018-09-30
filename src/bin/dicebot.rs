@@ -56,6 +56,11 @@ fn main() {
           .desc("Rolls up a conjured buddy (Spirit / Sprite)")
           .usage("[CONJURE] [FORCE] [SOAK]")
       })
+      .command("foe", |c| {
+        c.cmd(shadowrun_friend)
+          .desc("Binds a conjured buddy (Spirit / Sprite)")
+          .usage("[BINDING] [FORCE] [SOAK]")
+      })
       .command("ed", |c| c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step").usage("[DICE_COUNT] [...]"))
       .command("dice", |c| {
         c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
