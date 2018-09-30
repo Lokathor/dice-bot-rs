@@ -75,9 +75,9 @@ command!(earthdawn_target(_ctx, msg, args) {
       } else {
         0
       };
-      let s_for_successes = if successes != 1 { "s" } else { ""};
+      let es_for_successes = if successes != 1 { "es" } else { ""};
       let output = format!("Rolled step {} vs {}: got {} ({} success{})",
-        step_value, target, step_roll, successes, s_for_successes);
+        step_value, target, step_roll, successes, es_for_successes);
       if let Err(why) = msg.channel_id.say(output) {
         println!("Error sending message: {:?}", why);
       }
