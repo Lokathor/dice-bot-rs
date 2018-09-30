@@ -12,6 +12,7 @@ use serenity::model::id::UserId;
 use serenity::prelude::*;
 
 extern crate dice_bot;
+use dice_bot::earthdawn::*;
 use dice_bot::shadowrun::*;
 use dice_bot::*;
 
@@ -45,11 +46,13 @@ fn main() {
       .command("as", |c| {
         c.cmd(after_sundown).desc("Rolls After Sundown style").usage("[DICE_COUNT] [...]")
       })
-      .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style").usage("[DICE_COUNT] [...]"))
+      .command("sr", |c| {
+        c.cmd(shadowrun).desc("Rolls Shadowrun 4e style (up to 10)").usage("[COUNT] [...]")
+      })
       .command("sre", |c| {
         c.cmd(shadowrun_edge)
-          .desc("Rolls Shadowrun 4e+Edge style (6-again)")
-          .usage("[DICE_COUNT] [...]")
+          .desc("Rolls Shadowrun 4e with 6-again (up to 10)")
+          .usage("[COUNT] [...]")
       })
       .command("friend", |c| {
         c.cmd(shadowrun_friend)
@@ -61,7 +64,17 @@ fn main() {
           .desc("Binds a conjured buddy (Spirit / Sprite)")
           .usage("[BINDING] [FORCE] [SOAK]")
       })
-      .command("ed", |c| c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step").usage("[DICE_COUNT] [...]"))
+      .command("ed", |c| {
+        c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step (up to 10)").usage("[STEP] [...]")
+      })
+      .command("edk", |c| {
+        c.cmd(earthdawn_karma)
+          .desc("Rolls an Earthdawn 4e step with karma (up to 10)")
+          .usage("[STEP] [...]")
+      })
+      .command("edt", |c| {
+        c.cmd(earthdawn_target).desc("Rolls an Earthdawn 4e step").usage("[STEP] [TARGET]")
+      })
       .command("dice", |c| {
         c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
       })
@@ -111,24 +124,6 @@ command!(after_sundown(_ctx, msg, args) {
           if let Err(why) = msg.channel_id.say(output) {
             println!("Error sending message: {:?}", why);
           }
-        }
-      },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
-      }
-    }
-  }
-});
-
-command!(earthdawn(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
-  for arg in args.full().split_whitespace().take(5).map(basic_sum_str) {
-    match arg {
-      Some(step_value) => {
-        let step_roll = step(gen, step_value);
-        let output = format!("Rolled step {}: {}", step_value, step_roll);
-        if let Err(why) = msg.channel_id.say(output) {
-          println!("Error sending message: {:?}", why);
         }
       },
       None => {
@@ -234,51 +229,3 @@ command!(dice(_ctx, msg, args) {
     }
   }
 });
-
-trait ExplodingRange {
-  fn explode(&self, &mut PCG32) -> u32;
-}
-
-impl ExplodingRange for RandRangeInclusive32 {
-  fn explode(&self, gen: &mut PCG32) -> u32 {
-    let mut times = 0;
-    loop {
-      let roll = self.sample_with(gen);
-      if roll == self.high() {
-        times += 1;
-        continue;
-      } else {
-        return self.high() * times + roll;
-      }
-    }
-  }
-}
-
-/// Rolls a step roll, according to the 4th edition chart.
-pub fn step(gen: &mut PCG32, mut step: i32) -> i32 {
-  if step < 1 {
-    0
-  } else {
-    let mut total = 0;
-    while step > 13 {
-      total += d12.explode(gen);
-      step -= 7;
-    }
-    (total + match step {
-      1 => (d4.explode(gen) as i32 - 2).max(1) as u32,
-      2 => (d4.explode(gen) as i32 - 1).max(1) as u32,
-      3 => d4.explode(gen),
-      4 => d6.explode(gen),
-      5 => d8.explode(gen),
-      6 => d10.explode(gen),
-      7 => d12.explode(gen),
-      8 => d6.explode(gen) + d6.explode(gen),
-      9 => d8.explode(gen) + d6.explode(gen),
-      10 => d8.explode(gen) + d8.explode(gen),
-      11 => d10.explode(gen) + d8.explode(gen),
-      12 => d10.explode(gen) + d10.explode(gen),
-      13 => d12.explode(gen) + d10.explode(gen),
-      _other => unreachable!(),
-    }) as i32
-  }
-}

@@ -59,42 +59,35 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
 
 command!(shadowrun(_ctx, msg, args) {
   let mut output = String::new();
-  for arg in args.full().split_whitespace().take(10).map(basic_sum_str) {
-    match arg {
-      Some(dice_count) => {
-        let dice_count = dice_count.max(0).min(5_000) as u32;
-        let pool_output = sr4(dice_count, false);
-        let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
-        let hits = pool_output.hits_total;
-        let s_for_hits = if hits != 1 { "s" } else { "" };
-        let dice_report_output = match pool_output.roll_list {
-          Some(roll_vec) => {
-            if roll_vec.len() > 0 {
-              let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push_str(" `(");
-              for roll in roll_vec {
-                report.push((b'0' + roll) as char);
-                report.push(',');
-              }
-              report.pop();
-              report.push_str(")`");
-              report
-            } else {
-              "".to_string()
-            }
-          },
-          None => "".to_string(),
-        };
-        output.push_str(&format!(
-          "Rolled {} dice: {}{} hit{}{}",
-          dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
-        ));
-        output.push('\n');
+  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+    let dice_count = dice_count.max(0).min(5_000) as u32;
+    let pool_output = sr4(dice_count, false);
+    let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
+    let hits = pool_output.hits_total;
+    let s_for_hits = if hits != 1 { "s" } else { "" };
+    let dice_report_output = match pool_output.roll_list {
+      Some(roll_vec) => {
+        if roll_vec.len() > 0 {
+          let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
+          report.push_str(" `(");
+          for roll in roll_vec {
+            report.push((b'0' + roll) as char);
+            report.push(',');
+          }
+          report.pop();
+          report.push_str(")`");
+          report
+        } else {
+          "".to_string()
+        }
       },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
-      }
-    }
+      None => "".to_string(),
+    };
+    output.push_str(&format!(
+      "Rolled {} dice: {}{} hit{}{}",
+      dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
+    ));
+    output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
@@ -106,42 +99,35 @@ command!(shadowrun(_ctx, msg, args) {
 
 command!(shadowrun_edge(_ctx, msg, args) {
   let mut output = String::new();
-  for arg in args.full().split_whitespace().take(10).map(basic_sum_str) {
-    match arg {
-      Some(dice_count) => {
-        let dice_count = dice_count.max(0).min(5_000) as u32;
-        let pool_output = sr4(dice_count, true);
-        let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
-        let hits = pool_output.hits_total;
-        let s_for_hits = if hits != 1 { "s" } else { "" };
-        let dice_report_output = match pool_output.roll_list {
-          Some(roll_vec) => {
-            if roll_vec.len() > 0 {
-              let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
-              report.push_str(" `(");
-              for roll in roll_vec {
-                report.push((b'0' + roll) as char);
-                report.push(',');
-              }
-              report.pop();
-              report.push_str(")`");
-              report
-            } else {
-              "".to_string()
-            }
-          },
-          None => "".to_string(),
-        };
-        output.push_str(&format!(
-          "Rolled {} dice with edge (6-again): {}{} hit{}{}",
-          dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
-        ));
-        output.push('\n');
+  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+    let dice_count = dice_count.max(0).min(5_000) as u32;
+    let pool_output = sr4(dice_count, true);
+    let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
+    let hits = pool_output.hits_total;
+    let s_for_hits = if hits != 1 { "s" } else { "" };
+    let dice_report_output = match pool_output.roll_list {
+      Some(roll_vec) => {
+        if roll_vec.len() > 0 {
+          let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
+          report.push_str(" `(");
+          for roll in roll_vec {
+            report.push((b'0' + roll) as char);
+            report.push(',');
+          }
+          report.pop();
+          report.push_str(")`");
+          report
+        } else {
+          "".to_string()
+        }
       },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
-      }
-    }
+      None => "".to_string(),
+    };
+    output.push_str(&format!(
+      "Rolled {} dice with edge (6-again): {}{} hit{}{}",
+      dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
+    ));
+    output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
@@ -153,9 +139,8 @@ command!(shadowrun_edge(_ctx, msg, args) {
 
 command!(shadowrun_friend(_ctx, msg, args) {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().take(3).filter_map(basic_sum_str).collect();
-  let terms_ref: &[i32] = &terms;
-  match terms_ref {
+  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  match &terms as &[i32] {
     [conjure, force, soak] => {
       if *conjure < 1 {
         output.push_str("No conjure dice!");
@@ -266,9 +251,8 @@ command!(shadowrun_friend(_ctx, msg, args) {
 
 command!(shadowrun_foe(_ctx, msg, args) {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().take(3).filter_map(basic_sum_str).collect();
-  let terms_ref: &[i32] = &terms;
-  match terms_ref {
+  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  match &terms as &[i32] {
     [bind, force, soak] => {
       if *bind < 1 {
         output.push_str("No binding dice!");
