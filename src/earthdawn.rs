@@ -71,7 +71,7 @@ command!(earthdawn_target(_ctx, msg, args) {
     [step_value, target] => {
       let step_roll = step(gen, *step_value, false);
       let successes = if step_roll > *target {
-        (step_roll - target) / 5
+        1 + (step_roll - target) / 5
       } else {
         0
       };
