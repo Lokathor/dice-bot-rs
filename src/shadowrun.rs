@@ -170,7 +170,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
         let dice_report_output = match pool_output.roll_list {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
-              let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
               report.push_str(" `(");
               for roll in roll_vec {
                 report.push((b'0' + roll) as char);
@@ -201,7 +201,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
         let dice_report_output = match pool_output.roll_list {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
-              let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
               report.push_str(" `(");
               for roll in roll_vec {
                 report.push((b'0' + roll) as char);
@@ -233,7 +233,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
         let dice_report_output = match pool_output.roll_list {
           Some(roll_vec) => {
             if roll_vec.len() > 0 {
-              let mut report = String::with_capacity(roll_vec.len() * 2 + 2);
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
               report.push_str(" `(");
               for roll in roll_vec {
                 report.push((b'0' + roll) as char);
@@ -248,7 +248,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
           },
           None => "".to_string(),
         };
-        let net_drain = ((force/2 + force_hits) - pool_output.hits_total).max(0);
+        let net_drain = ((force/2 + force_hits) as i32 - pool_output.hits_total as i32).max(0);
         output.push_str(&format!(
           "You rolled {} dice to soak drain: {}{} hit{} ({} net drain){}",
           dice_count, glitch_string_output, hits, s_for_hits, net_drain, dice_report_output
