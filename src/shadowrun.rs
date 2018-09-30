@@ -263,3 +263,124 @@ command!(shadowrun_friend(_ctx, msg, args) {
     println!("Error sending message: {:?}", why);
   }
 });
+
+command!(shadowrun_foe(_ctx, msg, args) {
+  let mut output = String::new();
+  let terms: Vec<i32> = args.full().split_whitespace().take(3).filter_map(basic_sum_str).collect();
+  let terms_ref: &[i32] = &terms;
+  match terms_ref {
+    [bind, force, soak] => {
+      if *bind < 1 {
+        output.push_str("No binding dice!");
+      } else if *force < 1 {
+        output.push_str("There's no Force there!")
+      } else {
+        let dice_count = (*bind).max(0).min(5_000) as u32;
+        let pool_output = sr4(dice_count, false);
+        let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
+        let hits = pool_output.hits_total;
+        let s_for_hits = if hits != 1 { "s" } else { "" };
+        let dice_report_output = match pool_output.roll_list {
+          Some(roll_vec) => {
+            if roll_vec.len() > 0 {
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
+              report.push_str(" `(");
+              for roll in roll_vec {
+                report.push((b'0' + roll) as char);
+                report.push(',');
+              }
+              report.pop();
+              report.push_str(")`");
+              report
+            } else {
+              "".to_string()
+            }
+          },
+          None => "".to_string(),
+        };
+        output.push_str(&format!(
+          "You rolled {} dice to bind: {}{} hit{}{}",
+          dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
+        ));
+        output.push('\n');
+        let conjure_hits = pool_output.hits_total;
+        //
+        let force = (*force).max(0).min(5_000) as u32;
+        let dice_count = force * 2;
+        let pool_output = sr4(dice_count, false);
+        let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
+        let hits = pool_output.hits_total;
+        let s_for_hits = if hits != 1 { "s" } else { "" };
+        let dice_report_output = match pool_output.roll_list {
+          Some(roll_vec) => {
+            if roll_vec.len() > 0 {
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
+              report.push_str(" `(");
+              for roll in roll_vec {
+                report.push((b'0' + roll) as char);
+                report.push(',');
+              }
+              report.pop();
+              report.push_str(")`");
+              report
+            } else {
+              "".to_string()
+            }
+          },
+          None => "".to_string(),
+        };
+        let binding_net_hits = (conjure_hits as i32 - pool_output.hits_total as i32).max(0);
+        if binding_net_hits == 0 {
+          output.push_str(&format!(
+            "Your victim rolled {} dice to resist: {}{} hit{} (failed to bind!){}",
+            dice_count, glitch_string_output, hits, s_for_hits, dice_report_output
+          ));
+          output.push('\n');
+        } else {
+          let s_for_binding_net_hits = if binding_net_hits > 1 { "s" } else { "" };
+          output.push_str(&format!(
+            "Your helpless victim rolled {} dice to resist: {}{} hit{} ({} net hit{}){}",
+            dice_count, glitch_string_output, hits, s_for_hits, binding_net_hits, s_for_binding_net_hits, dice_report_output
+          ));
+          output.push('\n');
+        }
+        let force_hits = pool_output.hits_total;
+        //
+        let dice_count = (*soak).max(0).min(5_000) as u32;
+        let pool_output = sr4(dice_count, false);
+        let glitch_string_output = glitch_string(pool_output.hits_total, pool_output.is_glitch);
+        let hits = pool_output.hits_total;
+        let s_for_hits = if hits != 1 { "s" } else { "" };
+        let dice_report_output = match pool_output.roll_list {
+          Some(roll_vec) => {
+            if roll_vec.len() > 0 {
+              let mut report = String::with_capacity(roll_vec.len() * 2 + 5);
+              report.push_str(" `(");
+              for roll in roll_vec {
+                report.push((b'0' + roll) as char);
+                report.push(',');
+              }
+              report.pop();
+              report.push_str(")`");
+              report
+            } else {
+              "".to_string()
+            }
+          },
+          None => "".to_string(),
+        };
+        let net_drain = ((force/2 + force_hits/2) as i32 - pool_output.hits_total as i32).max(0);
+        output.push_str(&format!(
+          "You rolled {} dice to soak drain: {}{} hit{} ({} net drain){}",
+          dice_count, glitch_string_output, hits, s_for_hits, net_drain, dice_report_output
+        ));
+      }
+    }
+    _ => {
+      output.push_str("Usage: CONJURE FORCE SOAK");
+    }
+  }
+  if let Err(why) = msg.channel_id.say(output) {
+    println!("Error sending message: {:?}", why);
+  }
+});
