@@ -192,7 +192,8 @@ command!(shadowrun_foe(_ctx, msg, args) {
         }
         let bind_hits = bind_output.hits_total;
         //
-        let force_output = do_the_dice_pool!(output, "Your victim rolled", force, true, "dice to resist");
+        let force_dice = force*2;
+        let force_output = do_the_dice_pool!(output, "Your victim rolled", force_dice, true, "dice to resist");
         {
           let binding_net_hits = (bind_hits as i32 - force_output.hits_total as i32).max(0);
           if binding_net_hits == 0 {
