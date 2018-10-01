@@ -101,6 +101,7 @@ command!(shadowrun(_ctx, msg, args) {
   let mut output = String::new();
   for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
     format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, false, "dice"));
+    output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
@@ -114,6 +115,7 @@ command!(shadowrun_edge(_ctx, msg, args) {
   let mut output = String::new();
   for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
     format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, true, "dice with edge (6-again)"));
+    output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
