@@ -138,14 +138,14 @@ command!(shadowrun_friend(_ctx, msg, args) {
       } else if force < 1 {
         output.push_str("There's no Force there!")
       } else {
-        let conjure_output = do_the_dice_pool!(output, "You rolled", conjure, true, "dice to conjure");
+        let conjure_output = do_the_dice_pool!(output, "You rolled", conjure, false, "dice to conjure");
         {
           format_the_dice_report!(output, conjure_output);
           output.push('\n');
         }
         let conjure_hits = conjure_output.hits_total;
         //
-        let force_output = do_the_dice_pool!(output, "Your friend rolled", force, true, "dice to resist");
+        let force_output = do_the_dice_pool!(output, "Your friend rolled", force, false, "dice to resist");
         {
           let services_owed = (conjure_hits as i32 - force_output.hits_total as i32).max(0);
           let s_for_services_owed = if services_owed != 1 { "s" } else { "" };
@@ -155,7 +155,7 @@ command!(shadowrun_friend(_ctx, msg, args) {
         }
         let force_hits = force_output.hits_total as i32;
         //
-        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, true, "dice to soak");
+        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
           let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
@@ -185,7 +185,7 @@ command!(shadowrun_foe(_ctx, msg, args) {
       } else if force < 1 {
         output.push_str("There's no Force there!")
       } else {
-        let bind_output = do_the_dice_pool!(output, "You rolled", bind, true, "dice to bind");
+        let bind_output = do_the_dice_pool!(output, "You rolled", bind, false, "dice to bind");
         {
           format_the_dice_report!(output, bind_output);
           output.push('\n');
@@ -193,7 +193,7 @@ command!(shadowrun_foe(_ctx, msg, args) {
         let bind_hits = bind_output.hits_total;
         //
         let force_dice = force*2;
-        let force_output = do_the_dice_pool!(output, "Your victim rolled", force_dice, true, "dice to resist");
+        let force_output = do_the_dice_pool!(output, "Your victim rolled", force_dice, false, "dice to resist");
         {
           let binding_net_hits = (bind_hits as i32 - force_output.hits_total as i32).max(0);
           if binding_net_hits == 0 {
@@ -207,7 +207,7 @@ command!(shadowrun_foe(_ctx, msg, args) {
         }
         let force_hits = force_output.hits_total as i32;
         //
-        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, true, "dice to soak");
+        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
           let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
@@ -224,7 +224,6 @@ command!(shadowrun_foe(_ctx, msg, args) {
   }
 });
 
-/*
 command!(shadowrun_attack(_ctx, msg, args) {
   let mut output = String::new();
   let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
@@ -238,12 +237,35 @@ command!(shadowrun_attack(_ctx, msg, args) {
         let damage = *damage as u32;
         let soak = (*soak).max(0) as u32;
         //
-        let attack_result = sr4(attack, false);
-        let evade_result = sr4(evade, false);
-        let damage_result = sr4(damage, false);
-        let soak_result = sr4(soak, false);
+        let attack_output = do_the_dice_pool!(output, "You rolled", attack, false, "dice to attack");
+        {
+          format_the_dice_report!(output, attack_output);
+          output.push('\n');
+        }
+        let attack_hits = attack_output.hits_total;
         //
-
+        let evade_output = do_the_dice_pool!(output, "They rolled", evade, false, "dice to evade");
+        let evade_hits = attack_output.hits_total;
+        let attack_net_hits = attack_hits as i32 - evade_hits as i32;
+        if attack_net_hits < 0 {
+          output.push_str(" (you missed!)");
+        } else if attack_net_hits == 0 {
+          output.push_str(" (grazing hit, no damage)");
+        } else {
+          let s_for_net_hits = if attack_net_hits != 1 { "s" } else { "" };
+          let modified_damage = damage as i32 + attack_net_hits;
+          output.push_str(&format!(" ({} net hit{}, modified damage is {})",attack_net_hits, s_for_net_hits, modified_damage));
+          format_the_dice_report!(output, evade_output);
+          output.push('\n');
+          //
+          let soak_output = do_the_dice_pool!(output, "They rolled", soak, false, "dice to soak");
+          {
+            let damage_after_soak = (modified_damage - soak_output.hits_total as i32).max(0);
+            output.push_str(&format!(" ({} damage after soak)",damage_after_soak));
+            format_the_dice_report!(output, evade_output);
+            output.push('\n');
+          }
+        }
       }
     }
     _ => {
@@ -254,4 +276,3 @@ command!(shadowrun_attack(_ctx, msg, args) {
     println!("Error sending message: {:?}", why);
   }
 });
-*/

@@ -43,41 +43,39 @@ fn main() {
           .delimiter(" ")
           .case_insensitivity(true)
       })
-      .command("as", |c| {
-        c.cmd(after_sundown).desc("Rolls After Sundown style").usage("[DICE_COUNT] [...]")
-      })
-      .command("sr", |c| {
-        c.cmd(shadowrun).desc("Rolls Shadowrun 4e style (up to 10)").usage("[COUNT] [...]")
-      })
+      // Shadowrun
+      .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style (up to 10)").usage("DICE [...]"))
       .command("sre", |c| {
         c.cmd(shadowrun_edge)
           .desc("Rolls Shadowrun 4e with 6-again (up to 10)")
-          .usage("[COUNT] [...]")
+          .usage("DICE [...]")
+      })
+      .command("sra", |c| {
+        c.cmd(shadowrun_attack).desc("Rolls a Shadowrun 4e attack cycle").usage("ATTACK EVADE DAMAGE SOAK")
       })
       .command("friend", |c| {
         c.cmd(shadowrun_friend)
           .desc("Rolls up a conjured buddy (Spirit / Sprite)")
-          .usage("[CONJURE] [FORCE] [SOAK]")
+          .usage("CONJURE FORCE SOAK")
       })
       .command("foe", |c| {
         c.cmd(shadowrun_foe)
           .desc("Binds a conjured buddy (Spirit / Sprite)")
-          .usage("[BINDING] [FORCE] [SOAK]")
+          .usage("BINDING FORCE SOAK")
       })
+      // Earthdawn
       .command("ed", |c| {
-        c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step (up to 10)").usage("[STEP] [...]")
+        c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step (up to 10)").usage("STEP [...]")
       })
       .command("edk", |c| {
         c.cmd(earthdawn_karma)
           .desc("Rolls an Earthdawn 4e step with karma (up to 10)")
-          .usage("[STEP] [...]")
+          .usage("STEP [...]")
       })
-      .command("edt", |c| {
-        c.cmd(earthdawn_target).desc("Rolls an Earthdawn 4e step").usage("[STEP] [TARGET]")
-      })
-      .command("dice", |c| {
-        c.cmd(dice).desc("Rolls a standard dice expression").usage("[DICE_EXPRESSION] [...]")
-      })
+      .command("edt", |c| c.cmd(earthdawn_target).desc("Rolls an Earthdawn 4e step").usage("STEP TARGET"))
+      // Other
+      .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
+      .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
       .simple_bucket("help", 30)
       .help(help_commands::with_embeds),
   );
