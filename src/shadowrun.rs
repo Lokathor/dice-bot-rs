@@ -245,7 +245,7 @@ command!(shadowrun_attack(_ctx, msg, args) {
         let attack_hits = attack_output.hits_total;
         //
         let evade_output = do_the_dice_pool!(output, "They rolled", evade, false, "dice to evade");
-        let evade_hits = attack_output.hits_total;
+        let evade_hits = evade_output.hits_total;
         let attack_net_hits = attack_hits as i32 - evade_hits as i32;
         if attack_net_hits < 0 {
           output.push_str(" (you missed!)");
