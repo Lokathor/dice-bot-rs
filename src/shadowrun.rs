@@ -59,19 +59,22 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
 
 macro_rules! format_the_dice_report {
   ($dest:ident, $dice_output:expr) => {
-    ($dice_output).roll_list.as_ref().map(|roll_vec| {
-      if roll_vec.len() > 0 {
-        $dest.push_str(" `(");
-        for roll in roll_vec {
-          $dest.push((b'0' + roll) as char);
-          $dest.push(',');
+    match &($dice_output).roll_list {
+      Some(roll_vec) => {
+        if roll_vec.len() > 0 {
+          $dest.push_str(" `(");
+          for roll in roll_vec {
+            $dest.push((b'0' + roll) as char);
+            $dest.push(',');
+          }
+          $dest.pop();
+          $dest.push_str(")`");
+        } else {
+          "".to_string();
         }
-        $dest.pop();
-        $dest.push_str(")`");
-      } else {
-        "".to_string();
       }
-    });
+      None => {}
+    };
   };
 }
 
