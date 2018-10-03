@@ -247,7 +247,13 @@ command!(sigil_command(_ctx, msg, args) {
     }
   }
   output.pop();
-  if let Err(why) = msg.channel_id.say(output) {
-    println!("Error sending message: {:?}", why);
+  if output.len() > 0 {
+    if let Err(why) = msg.channel_id.say(output) {
+      println!("Error sending message: {:?}", why);
+    }
+  } else {
+    if let Err(why) = msg.channel_id.say("usage: sigil NUMBER") {
+      println!("Error sending message: {:?}", why);
+    }
   }
 });
