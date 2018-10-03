@@ -76,6 +76,7 @@ fn main() {
       // Other
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
+      .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
       .simple_bucket("help", 30)
       .help(help_commands::with_embeds),
   );
@@ -225,5 +226,28 @@ command!(dice(_ctx, msg, args) {
     } else {
       //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
     }
+  }
+});
+
+command!(sigil_command(_ctx, msg, args) {
+  let gen: &mut PCG32 = &mut get_global_generator();
+  let mut output = String::new();
+  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  for term in terms {
+    let x = term.abs();
+    if x > 0 {
+      let mut total = 0;
+      for _ in 0 .. x {
+        total += d6.sample_with(gen) as i32;
+        total -= d6.sample_with(gen) as i32;
+      }
+      output.push_str(&format!("Rolling Sigil {}: {}\n", x, total.abs()));
+    } else {
+      output.push_str(&format!("Rolling Sigil {}: 0\n", x));
+    }
+  }
+  output.pop();
+  if let Err(why) = msg.channel_id.say(output) {
+    println!("Error sending message: {:?}", why);
   }
 });
