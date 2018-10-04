@@ -13,6 +13,7 @@ use serenity::prelude::*;
 
 extern crate dice_bot;
 use dice_bot::earthdawn::*;
+use dice_bot::eote::*;
 use dice_bot::shadowrun::*;
 use dice_bot::*;
 
@@ -76,6 +77,8 @@ fn main() {
       // Other
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
+      .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
+      // User Commands
       .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
       .simple_bucket("help", 30)
       .help(help_commands::with_embeds),

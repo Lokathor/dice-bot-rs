@@ -5,6 +5,7 @@ extern crate randomize;
 use randomize::*;
 
 pub mod earthdawn;
+pub mod eote;
 pub mod shadowrun;
 
 trait ExplodingRange {
