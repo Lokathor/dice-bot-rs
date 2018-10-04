@@ -166,7 +166,7 @@ command!(eote(_ctx, msg, args) {
     if successes > 0 {
       symbol_total_string.push_str(&format!("{} Success",successes));
       if successes > 1 {
-        symbol_total_string.push_str("s, ");
+        symbol_total_string.push_str("es, ");
       } else {
         symbol_total_string.push_str(", ");
       }
