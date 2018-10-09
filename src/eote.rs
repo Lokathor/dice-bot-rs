@@ -120,12 +120,6 @@ command!(eote(_ctx, msg, args) {
   let terms: Vec<&str> = args.full().split_whitespace().collect();
   'termloop: for term in terms {
     let mut pool_string = String::new();
-    let mut successes = 0i32;
-    let mut advantages = 0i32;
-    let mut triumphs = 0i32;
-    let mut despairs = 0i32;
-    let mut lights = 0i32;
-    let mut darks = 0i32;
     for ch in term.chars() {
       match ch {
         'u' | 'U' => pool_string.push('U'),
@@ -138,6 +132,12 @@ command!(eote(_ctx, msg, args) {
         _ => continue 'termloop,
       }
     }
+    let mut successes = 0i32;
+    let mut advantages = 0i32;
+    let mut triumphs = 0i32;
+    let mut despairs = 0i32;
+    let mut lights = 0i32;
+    let mut darks = 0i32;
     for pool_die in pool_string.chars() {
       let roll_result = match pool_die {
         'U' => blue(gen),

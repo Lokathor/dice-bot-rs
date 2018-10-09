@@ -87,7 +87,7 @@ macro_rules! do_the_dice_pool {
     $dest.push_str(&format!(
       "{prefix} {pool_size} {reason}: {glitch_string}{hit_count} hit{s_for_hits}",
       prefix = $line_prefix,
-      pool_size = $pool_size,
+      pool_size = dice_count,
       reason = $to_do,
       glitch_string = glitch_string_output,
       hit_count = hits,
