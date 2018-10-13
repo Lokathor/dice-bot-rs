@@ -91,53 +91,51 @@ fn main() {
 
 command!(after_sundown(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
-  for arg in args.full().split_whitespace().take(5).map(basic_sum_str) {
-    match arg {
-      Some(dice_count) => {
-        let dice_count = dice_count.max(0).min(5_000) as u32;
-        if dice_count > 0 {
-          let mut hits = 0;
-          const DICE_REPORT_MAXIMUM: u32 = 30;
-          let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
-          dice_record.push(' ');
-          dice_record.push('`');
-          dice_record.push('(');
-          for _ in 0 .. dice_count {
-            let roll = d6.sample_with(gen);
-            if roll >= 5 {
-              hits += 1;
-            }
-            if dice_count < DICE_REPORT_MAXIMUM {
-              dice_record.push(('0' as u8 + roll as u8) as char);
-              dice_record.push(',');
-            }
-          }
-          dice_record.pop();
-          dice_record.push(')');
-          dice_record.push('`');
-          let s_for_hits = if hits != 1 {"s"} else {""};
-          let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
-          let output = format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output);
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
-        } else {
-          let output = format!("No dice to roll!");
-          if let Err(why) = msg.channel_id.say(output) {
-            println!("Error sending message: {:?}", why);
-          }
+  let mut output = String::new();
+  for dice_count in args.full().split_whitespace().flat_map(basic_sum_str).take(10) {
+    let dice_count = dice_count.max(0).min(5_000) as u32;
+    if dice_count > 0 {
+      let mut hits = 0;
+      const DICE_REPORT_MAXIMUM: u32 = 30;
+      let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
+      dice_record.push(' ');
+      dice_record.push('`');
+      dice_record.push('(');
+      for _ in 0 .. dice_count {
+        let roll = d6.sample_with(gen);
+        if roll >= 5 {
+          hits += 1;
         }
-      },
-      None => {
-        //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+        if dice_count < DICE_REPORT_MAXIMUM {
+          dice_record.push(('0' as u8 + roll as u8) as char);
+          dice_record.push(',');
+        }
       }
+      dice_record.pop();
+      dice_record.push(')');
+      dice_record.push('`');
+      let s_for_hits = if hits != 1 {"s"} else {""};
+      let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
+      output.push_str(&format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output));
+    } else {
+      let output = format!("No dice to roll!");
+      if let Err(why) = msg.channel_id.say(output) {
+        println!("Error sending message: {:?}", why);
+      }
+    }
+  }
+  output.pop();
+  if output.len() > 0 {
+    if let Err(why) = msg.channel_id.say(output) {
+      println!("Error sending message: {:?}", why);
     }
   }
 });
 
 command!(dice(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut get_global_generator();
-  'exprloop: for dice_expression_str in args.full().split_whitespace().take(5) {
+  let mut output = String::new();
+  'exprloop: for dice_expression_str in args.full().split_whitespace().take(10) {
     let mut plus_only_form = dice_expression_str.replace("-","+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
@@ -222,12 +220,15 @@ command!(dice(_ctx, msg, args) {
           parsed_string.push_str(&sub_expression);
         }
       }
-      let output = format!("Rolled {}: {}",parsed_string, total);
-      if let Err(why) = msg.channel_id.say(output) {
-        println!("Error sending message: {:?}", why);
-      }
+      output.push_str(&format!("Rolled {}: {}\n",parsed_string, total));
     } else {
       //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
+    }
+  }
+  output.pop();
+  if output.len() > 0 {
+    if let Err(why) = msg.channel_id.say(output) {
+      println!("Error sending message: {:?}", why);
     }
   }
 });
