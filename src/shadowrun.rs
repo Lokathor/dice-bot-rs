@@ -248,9 +248,11 @@ command!(shadowrun_attack(_ctx, msg, args) {
         let evade_hits = evade_output.hits_total;
         let attack_net_hits = attack_hits as i32 - evade_hits as i32;
         if attack_net_hits < 0 {
-          output.push_str(" (you missed!)");
+          output.push_str(" (you missed!) ");
+          format_the_dice_report!(output, evade_output);
         } else if attack_net_hits == 0 {
-          output.push_str(" (grazing hit, no damage)");
+          output.push_str(" (grazing hit, no damage) ");
+          format_the_dice_report!(output, evade_output);
         } else {
           let s_for_net_hits = if attack_net_hits != 1 { "s" } else { "" };
           let modified_damage = damage as i32 + attack_net_hits;
