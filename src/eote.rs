@@ -35,7 +35,7 @@ static ONE_LIGHT: &'static [Symbol] = &[Light];
 static TWO_LIGHT: &'static [Symbol] = &[Light, Light];
 
 fn blue(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample_with(gen) {
+  match d6.sample(gen) {
     1 | 2 => BLANK,
     3 => TWO_ADVANTAGE,
     4 => ONE_ADVANTAGE,
@@ -46,7 +46,7 @@ fn blue(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn black(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample_with(gen) {
+  match d6.sample(gen) {
     1 | 2 => BLANK,
     3 | 4 => ONE_FAILURE,
     5 | 6 => ONE_DISADVANTAGE,
@@ -55,7 +55,7 @@ fn black(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn green(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample_with(gen) {
+  match d8.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 => TWO_SUCCESS,
@@ -67,7 +67,7 @@ fn green(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn purple(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample_with(gen) {
+  match d8.sample(gen) {
     1 => BLANK,
     2 => ONE_FAILURE,
     3 => TWO_FAILURE,
@@ -79,7 +79,7 @@ fn purple(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn yellow(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample_with(gen) {
+  match d12.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 | 5 => TWO_SUCCESS,
@@ -92,7 +92,7 @@ fn yellow(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn red(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample_with(gen) {
+  match d12.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_FAILURE,
     4 | 5 => TWO_FAILURE,
@@ -105,7 +105,7 @@ fn red(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn white(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample_with(gen) {
+  match d12.sample(gen) {
     1 | 2 | 3 | 4 | 5 | 6 => ONE_DARK,
     7 => TWO_DARK,
     8 | 9 => ONE_LIGHT,
@@ -115,7 +115,7 @@ fn white(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 command!(eote(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
+  let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   let terms: Vec<&str> = args.full().split_whitespace().collect();
   'termloop: for term in terms {

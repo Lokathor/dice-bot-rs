@@ -24,7 +24,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
       roll_list: None,
     };
   } else {
-    let gen: &mut PCG32 = &mut get_global_generator();
+    let gen: &mut PCG32 = &mut global_gen();
     let mut dice_record: Vec<u8> = vec![];
     //
     let mut dice_rolled = 0;
@@ -32,7 +32,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
     let mut ones = 0;
     let mut this_is_a_normal_roll = true;
     while dice_rolled < pool_size {
-      let roll = d6.sample_with(gen);
+      let roll = d6.sample(gen);
       if roll == 1 && this_is_a_normal_roll {
         ones += 1;
       } else if roll >= 5 {

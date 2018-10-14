@@ -90,7 +90,7 @@ fn main() {
 }
 
 command!(after_sundown(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
+  let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   for dice_count in args.full().split_whitespace().flat_map(basic_sum_str).take(10) {
     let dice_count = dice_count.max(0).min(5_000) as u32;
@@ -102,7 +102,7 @@ command!(after_sundown(_ctx, msg, args) {
       dice_record.push('`');
       dice_record.push('(');
       for _ in 0 .. dice_count {
-        let roll = d6.sample_with(gen);
+        let roll = d6.sample(gen);
         if roll >= 5 {
           hits += 1;
         }
@@ -133,7 +133,7 @@ command!(after_sundown(_ctx, msg, args) {
 });
 
 command!(dice(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
+  let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   'exprloop: for dice_expression_str in args.full().split_whitespace().take(10) {
     let mut plus_only_form = dice_expression_str.replace("-","+-");
@@ -194,16 +194,16 @@ command!(dice(_ctx, msg, args) {
           10 => d10,
           12 => d12,
           20 => d20,
-          _ => RandRangeInclusive32::new(1,num_sides)
+          _ => RandRangeU32::new(1..=num_sides)
         };
         if num_dice > 0 {
           for _ in 0 .. num_dice {
-            total += range.sample_with(gen) as i32;
+            total += range.sample(gen) as i32;
           }
           sub_expressions.push(format!("{}d{}", num_dice, num_sides));
         } else if num_dice < 0 {
           for _ in 0 .. num_dice.abs() {
-            total -= range.sample_with(gen) as i32;
+            total -= range.sample(gen) as i32;
           }
           sub_expressions.push(format!("{}d{}", num_dice, num_sides));
         }
@@ -234,7 +234,7 @@ command!(dice(_ctx, msg, args) {
 });
 
 command!(sigil_command(_ctx, msg, args) {
-  let gen: &mut PCG32 = &mut get_global_generator();
+  let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
   for term in terms {
@@ -242,8 +242,8 @@ command!(sigil_command(_ctx, msg, args) {
     if x > 0 {
       let mut total = 0;
       for _ in 0 .. x {
-        total += d6.sample_with(gen) as i32;
-        total -= d6.sample_with(gen) as i32;
+        total += d6.sample(gen) as i32;
+        total -= d6.sample(gen) as i32;
       }
       output.push_str(&format!("Rolling Sigil {}: {}\n", x, total.abs()));
     } else {
