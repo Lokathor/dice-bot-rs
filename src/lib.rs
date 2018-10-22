@@ -36,44 +36,9 @@ pub fn basic_sum_str(s: &str) -> Option<i32> {
   let mut current_is_negative = s.chars().nth(0).unwrap() == '-';
   for ch in s.chars() {
     match ch {
-      '0' => {
-        current *= 10;
-      }
-      '1' => {
-        current *= 10;
-        current += 1
-      }
-      '2' => {
-        current *= 10;
-        current += 2
-      }
-      '3' => {
-        current *= 10;
-        current += 3
-      }
-      '4' => {
-        current *= 10;
-        current += 4
-      }
-      '5' => {
-        current *= 10;
-        current += 5
-      }
-      '6' => {
-        current *= 10;
-        current += 6
-      }
-      '7' => {
-        current *= 10;
-        current += 7
-      }
-      '8' => {
-        current *= 10;
-        current += 8
-      }
-      '9' => {
-        current *= 10;
-        current += 9
+      '0' ... '9' => {
+          current *= 10;
+          current += ch.to_digit(10).unwrap() as i32;
       }
       '+' => {
         total += if current_is_negative { -current } else { current };
