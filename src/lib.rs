@@ -101,4 +101,6 @@ fn basic_sum_str_test() {
   assert_eq!(basic_sum_str("abc"), None);
   assert_eq!(basic_sum_str("-2"), Some(-2));
   assert_eq!(basic_sum_str("-2+7"), Some(5));
+  assert_eq!(basic_sum_str("--23"), Some(23));
+  assert_eq!(basic_sum_str("++54"), Some(54));
 }
