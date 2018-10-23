@@ -30,6 +30,12 @@ impl ExplodingRange for RandRangeU32 {
 }
 
 pub fn basic_sum_str(s: &str) -> Option<i32> {
+  if s.contains("/") {
+      return None
+  }
+  if s.contains("*") {
+      return None
+  }
   match meval::eval_str(s) {
     Ok(x) => Some(x as i32),
     _ => None,
@@ -66,5 +72,11 @@ mod tests {
   fn basic_sum_str_test_not_an_expression() {
     assert_eq!(basic_sum_str("abc"), None);
     assert_eq!(basic_sum_str("😝"), None);
+  }
+
+  #[test]
+  fn basic_sum_str_no_mult_or_div() {
+      assert_eq!(basic_sum_str("3/2"), None);
+      assert_eq!(basic_sum_str("45*3.145"), None);
   }
 }
