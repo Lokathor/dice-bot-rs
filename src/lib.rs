@@ -4,6 +4,8 @@ extern crate serenity;
 extern crate randomize;
 use randomize::*;
 
+extern crate meval;
+
 pub mod earthdawn;
 pub mod eote;
 pub mod shadowrun;
@@ -28,79 +30,41 @@ impl ExplodingRange for RandRangeU32 {
 }
 
 pub fn basic_sum_str(s: &str) -> Option<i32> {
-  if s.len() == 0 {
-    return None;
+  match meval::eval_str(s) {
+    Ok(x) => Some(x as i32),
+    _ => None,
   }
-  let mut total = 0;
-  let mut current = 0;
-  let mut current_is_negative = s.chars().nth(0).unwrap() == '-';
-  for ch in s.chars() {
-    match ch {
-      '0' => {
-        current *= 10;
-      }
-      '1' => {
-        current *= 10;
-        current += 1
-      }
-      '2' => {
-        current *= 10;
-        current += 2
-      }
-      '3' => {
-        current *= 10;
-        current += 3
-      }
-      '4' => {
-        current *= 10;
-        current += 4
-      }
-      '5' => {
-        current *= 10;
-        current += 5
-      }
-      '6' => {
-        current *= 10;
-        current += 6
-      }
-      '7' => {
-        current *= 10;
-        current += 7
-      }
-      '8' => {
-        current *= 10;
-        current += 8
-      }
-      '9' => {
-        current *= 10;
-        current += 9
-      }
-      '+' => {
-        total += if current_is_negative { -current } else { current };
-        current = 0;
-        current_is_negative = false;
-      }
-      '-' => {
-        total += if current_is_negative { -current } else { current };
-        current = 0;
-        current_is_negative = true;
-      }
-      _ => return None,
-    };
-  }
-  total += if current_is_negative { -current } else { current };
-  Some(total)
 }
 
-#[test]
-fn basic_sum_str_test() {
-  assert_eq!(basic_sum_str("1"), Some(1));
-  assert_eq!(basic_sum_str("12"), Some(12));
-  assert_eq!(basic_sum_str("4+5"), Some(9));
-  assert_eq!(basic_sum_str("8-2"), Some(6));
-  assert_eq!(basic_sum_str("abc"), None);
-  assert_eq!(basic_sum_str("-2"), Some(-2));
-  assert_eq!(basic_sum_str("-2+7"), Some(5));
-  assert_eq!(basic_sum_str("--23"), Some(23));
-  assert_eq!(basic_sum_str("++54"), Some(54));
+#[cfg(test)]
+mod tests {
+
+  use super::*;
+
+  #[test]
+  fn basic_sum_str_test_nums() {
+    assert_eq!(basic_sum_str("1"), Some(1));
+    assert_eq!(basic_sum_str("12"), Some(12));
+    assert_eq!(basic_sum_str("-2"), Some(-2));
+  }
+
+  #[test]
+  fn basic_sum_str_test_equations() {
+    assert_eq!(basic_sum_str("-2+7"), Some(5));
+    assert_eq!(basic_sum_str("8-2"), Some(6));
+    assert_eq!(basic_sum_str("4+5"), Some(9));
+  }
+
+  #[test]
+  fn basic_sum_str_test_too_many_operands() {
+    assert_eq!(basic_sum_str("--23"), Some(23));
+    assert_eq!(basic_sum_str("++54"), Some(54));
+    assert_eq!(basic_sum_str("-------123"), Some(-123));
+  }
+
+  #[test]
+  fn basic_sum_str_test_not_an_expression() {
+    assert_eq!(basic_sum_str("abc"), None);
+    assert_eq!(basic_sum_str("😝"), None);
+  }
 }

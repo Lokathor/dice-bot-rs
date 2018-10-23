@@ -1,18 +1,21 @@
 [package]
-name = "dice-bot"
-version = "0.4.3"
 authors = ["Lokathor <zefria@gmail.com>"]
-repository = "https://github.com/Lokathor/dice-bot-rs"
-readme = "README.md"
-keywords = ["discord","dice"]
 description = "A discord bot to roll RPG dice rolls."
+keywords = ["discord", "dice"]
 license = "0BSD"
+name = "dice-bot"
 publish = false
+readme = "README.md"
+repository = "https://github.com/Lokathor/dice-bot-rs"
+version = "0.4.3"
 
 [dependencies]
-serenity = "0.5"
+meval = "0.2.0"
 randomize = "1.0"
+serenity = "0.5"
+
+[profile]
 
 [profile.release]
-lto = true
 codegen-units = 1
+lto = true
