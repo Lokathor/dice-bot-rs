@@ -110,8 +110,8 @@ command!(after_sundown(_ctx, msg, args) {
         }
       }
       dice_record.pop();
-      /// I have ABSOLUTELY no idea why we need to put this extra space in here,
-      /// but we do and that makes the output correct.
+      // I have ABSOLUTELY no idea why we need to put this extra space in here,
+      // but we do and that makes the output correct.
       dice_record.push_str(")` ");
       println!("{}", dice_record);
       let s_for_hits = if hits != 1 {"s"} else {""};
