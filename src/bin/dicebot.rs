@@ -98,9 +98,7 @@ command!(after_sundown(_ctx, msg, args) {
       let mut hits = 0;
       const DICE_REPORT_MAXIMUM: u32 = 30;
       let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
-      dice_record.push(' ');
-      dice_record.push('`');
-      dice_record.push('(');
+      dice_record.push_str(" `(");
       for _ in 0 .. dice_count {
         let roll = d6.sample(gen);
         if roll >= 5 {
@@ -112,8 +110,7 @@ command!(after_sundown(_ctx, msg, args) {
         }
       }
       dice_record.pop();
-      dice_record.push(')');
-      dice_record.push('`');
+      dice_record.push_str(")`");
       let s_for_hits = if hits != 1 {"s"} else {""};
       let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
       output.push_str(&format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output));
