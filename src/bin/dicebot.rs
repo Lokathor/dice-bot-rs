@@ -116,7 +116,6 @@ command!(after_sundown(_ctx, msg, args) {
       dice_record.push('`');
       let s_for_hits = if hits != 1 {"s"} else {""};
       let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
-      dice_record.push('`');
       output.push_str(&format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output));
     } else {
       let output = format!("No dice to roll!");
