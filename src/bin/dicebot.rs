@@ -112,7 +112,7 @@ command!(after_sundown(_ctx, msg, args) {
       dice_record.pop();
       // I have ABSOLUTELY no idea why we need to put this extra space in here,
       // but we do and that makes the output correct.
-      dice_record.push_str(")` ");
+      dice_record.push_str(")`");
       let s_for_hits = if hits != 1 {"s"} else {""};
       let dice_report_output = if dice_count < DICE_REPORT_MAXIMUM { &dice_record } else { "" };
       output.push_str(&format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output));
@@ -122,6 +122,7 @@ command!(after_sundown(_ctx, msg, args) {
         println!("Error sending message: {:?}", why);
       }
     }
+    output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
