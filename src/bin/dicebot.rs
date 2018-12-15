@@ -78,6 +78,7 @@ fn main() {
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
       .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
+      .command("champ", |c| c.cmd(champions).desc("Rolls a Champions roll").usage("EXPRESSION [...]"))
       // User Commands
       .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
       .simple_bucket("help", 30)
@@ -249,6 +250,36 @@ command!(sigil_command(_ctx, msg, args) {
     } else {
       output.push_str(&format!("Rolling Sigil {}: 0\n", x));
     }
+  }
+  output.pop();
+  if output.len() > 0 {
+    if let Err(why) = msg.channel_id.say(output) {
+      println!("Error sending message: {:?}", why);
+    }
+  } else {
+    if let Err(why) = msg.channel_id.say("usage: sigil NUMBER") {
+      println!("Error sending message: {:?}", why);
+    }
+  }
+});
+
+command!(champions(_ctx, msg, args) {
+  let gen: &mut PCG32 = &mut global_gen();
+  let mut output = String::new();
+  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  for term in terms {
+    let mut rolls = [0; 3];
+    for roll_mut in rolls.iter_mut() {
+      *roll_mut = d6.sample(gen) as i32;
+    }
+    output.push_str(&format!("Rolling Champions {}: {}, [{},{},{}]\n",
+      term,
+      if rolls.iter().cloned().sum::<i32>() < term { "Success" } else { "Failure" },
+      rolls[0],
+      rolls[1],
+      rolls[2]
+      )
+    );
   }
   output.pop();
   if output.len() > 0 {
