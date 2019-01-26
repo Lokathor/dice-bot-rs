@@ -39,7 +39,7 @@ fn main() {
           .ignore_webhooks(true)
           .on_mention(true)
           .owners(vec![LOKATHOR_ID].into_iter().collect())
-          .prefixes(vec!["?", ",", "!"])
+          .prefixes(vec![","])
           .no_dm_prefix(true)
           .delimiter(" ")
           .case_insensitivity(true)
