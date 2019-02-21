@@ -50,6 +50,10 @@ fn main() {
           .delimiter(" ")
           .case_insensitivity(true)
       })
+      .simple_bucket("ddate", 60)
+      .simple_bucket("help", 30)
+      .help(help_commands::with_embeds)
+      .command("ddate", |c| c.cmd(ddate).desc("https://en.wikipedia.org/wiki/Discordian_calendar").bucket("ddate"))
       // Shadowrun
       .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style (up to 10)").usage("DICE [...]"))
       .command("sre", |c| {
@@ -87,10 +91,6 @@ fn main() {
       .command("champ", |c| c.cmd(champions).desc("Rolls a Champions roll").usage("EXPRESSION [...]"))
       // User Commands
       .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
-      .simple_bucket("help", 30)
-      .command("ddate", |c| c.cmd(ddate).desc("https://en.wikipedia.org/wiki/Discordian_calendar"))
-      .simple_bucket("ddate", 60)
-      .help(help_commands::with_embeds),
   );
 
   if let Err(why) = client.start() {
