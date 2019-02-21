@@ -5,17 +5,20 @@ use randomize::*;
 
 #[macro_use]
 extern crate serenity;
-use serenity::framework::standard::*;
-use serenity::model::channel::{Message, ReactionType};
-use serenity::model::gateway::Ready;
-use serenity::model::id::UserId;
-use serenity::prelude::*;
+use serenity::{
+  framework::standard::*,
+  model::{
+    channel::{Message, ReactionType},
+    gateway::Ready,
+    id::UserId,
+  },
+  prelude::*,
+};
 
 extern crate dice_bot;
-use dice_bot::earthdawn::*;
-use dice_bot::eote::*;
-use dice_bot::shadowrun::*;
-use dice_bot::*;
+use dice_bot::{earthdawn::*, eote::*, shadowrun::*, *};
+
+use std::process::{Command, Stdio};
 
 pub const LOKATHOR_ID: UserId = UserId(244106113321140224);
 
@@ -28,8 +31,11 @@ impl EventHandler for Handler {
 }
 
 fn main() {
-  let mut client =
-    Client::new(&::std::env::var("DISCORD_TOKEN").expect("Could not obtain DISCORD_TOKEN"), Handler).expect("Could not create the client");
+  let mut client = Client::new(
+    &::std::env::var("DISCORD_TOKEN").expect("Could not obtain DISCORD_TOKEN"),
+    Handler,
+  )
+  .expect("Could not create the client");
   client.with_framework(
     StandardFramework::new()
       .configure(|c| {
@@ -82,6 +88,8 @@ fn main() {
       // User Commands
       .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
       .simple_bucket("help", 30)
+      .command("ddate", |c| c.cmd(ddate).desc("https://en.wikipedia.org/wiki/Discordian_calendar"))
+      .simple_bucket("ddate", 60)
       .help(help_commands::with_embeds),
   );
 
@@ -89,6 +97,28 @@ fn main() {
     println!("Client::start error: {:?}", why);
   }
 }
+
+/// Opens a child process to check the `ddate` value.
+fn ddate_process() -> Option<String> {
+  String::from_utf8(
+    Command::new("ddate")
+      .stdout(Stdio::piped())
+      .spawn()
+      .ok()?
+      .wait_with_output()
+      .ok()?
+      .stdout,
+  )
+  .ok()
+}
+
+command!(ddate(_ctx, msg, _args) {
+  ddate_process().map(|date| {
+    if let Err(why) = msg.channel_id.say(date) {
+      println!("Error sending message: {:?}", why);
+    }
+  });
+});
 
 command!(after_sundown(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut global_gen();

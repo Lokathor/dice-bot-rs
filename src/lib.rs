@@ -76,19 +76,31 @@ pub fn basic_sum_str(s: &str) -> Option<i32> {
         current += 9
       }
       '+' => {
-        total += if current_is_negative { -current } else { current };
+        total += if current_is_negative {
+          -current
+        } else {
+          current
+        };
         current = 0;
         current_is_negative = false;
       }
       '-' => {
-        total += if current_is_negative { -current } else { current };
+        total += if current_is_negative {
+          -current
+        } else {
+          current
+        };
         current = 0;
         current_is_negative = true;
       }
       _ => return None,
     };
   }
-  total += if current_is_negative { -current } else { current };
+  total += if current_is_negative {
+    -current
+  } else {
+    current
+  };
   Some(total)
 }
 

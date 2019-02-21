@@ -52,7 +52,11 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
     PoolRollOutput {
       hits_total: hits,
       is_glitch: ones >= (pool_size + 1) / 2,
-      roll_list: if dice_record.len() > 0 { Some(dice_record) } else { None },
+      roll_list: if dice_record.len() > 0 {
+        Some(dice_record)
+      } else {
+        None
+      },
     }
   }
 }
