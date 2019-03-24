@@ -87,6 +87,7 @@ fn main() {
       // Other
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
+      .command("thaco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
       .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
       .command("champ", |c| c.cmd(champions).desc("Rolls a Champions roll").usage("EXPRESSION [...]"))
       // User Commands
@@ -166,11 +167,11 @@ command!(after_sundown(_ctx, msg, args) {
 command!(dice(_ctx, msg, args) {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  'exprloop: for dice_expression_str in args.full().split_whitespace().take(10) {
+  'exprloop: for dice_expression_str in args.full().split_whitespace().take(20) {
     let mut plus_only_form = dice_expression_str.replace("-","+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
-    for sub_expression in plus_only_form.split('+').take(7) {
+    for sub_expression in plus_only_form.split('+').take(70) {
       if sub_expression.len() == 0 {
         continue;
       }
@@ -255,6 +256,21 @@ command!(dice(_ctx, msg, args) {
     } else {
       //msg.react(ReactionType::Unicode(EMOJI_QUESTION.to_string())).ok();
     }
+  }
+  output.pop();
+  if output.len() > 0 {
+    if let Err(why) = msg.channel_id.say(output) {
+      println!("Error sending message: {:?}", why);
+    }
+  }
+});
+
+command!(thaco(_ctx, msg, args) {
+  let gen: &mut PCG32 = &mut global_gen();
+  let mut output = String::new();
+  for thaco_value in args.full().split_whitespace().flat_map(basic_sum_str).take(20) {
+    let roll = d20.sample(gen) as i32;
+    output.push_str(&format!("THACO {}: Rolled {}, Hits AC {} or greater.\n", thaco_value, roll, thaco_value - roll));
   }
   output.pop();
   if output.len() > 0 {
