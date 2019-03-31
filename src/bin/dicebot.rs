@@ -88,8 +88,10 @@ fn main() {
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
       .command("thaco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
+      .command("taco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
       .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
       .command("champ", |c| c.cmd(champions).desc("Rolls a Champions roll").usage("EXPRESSION [...]"))
+      .command("stat2e", |c| c.cmd(stat2e).desc("Rolls a 2e stat array"))
       // User Commands
       .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
   );
@@ -306,6 +308,24 @@ command!(sigil_command(_ctx, msg, args) {
     if let Err(why) = msg.channel_id.say("usage: sigil NUMBER") {
       println!("Error sending message: {:?}", why);
     }
+  }
+});
+
+command!(stat2e(_ctx, msg, _args) {
+  let gen: &mut PCG32 = &mut global_gen();
+  let mut output = String::new();
+  let roll = |gen: &mut PCG32| {
+    4 + d4.sample(gen) + d4.sample(gen) + d4.sample(gen) + d4.sample(gen)
+  };
+  output.push_str(&format!("Str: {}\n", roll(gen)));
+  output.push_str(&format!("Dex: {}\n", roll(gen)));
+  output.push_str(&format!("Con: {}\n", roll(gen)));
+  output.push_str(&format!("Int: {}\n", roll(gen)));
+  output.push_str(&format!("Wis: {}\n", roll(gen)));
+  output.push_str(&format!("Cha: {}\n", roll(gen)));
+  output.pop();
+  if let Err(why) = msg.channel_id.say(output) {
+    println!("Error sending message: {:?}", why);
   }
 });
 
