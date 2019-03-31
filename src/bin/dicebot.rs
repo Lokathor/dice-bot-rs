@@ -87,6 +87,7 @@ fn main() {
       // Other
       .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
       .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
+      .command("roll", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
       .command("thaco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
       .command("taco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
       .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
