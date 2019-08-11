@@ -268,7 +268,7 @@ command!(shadowrun_attack(_ctx, msg, args) {
           {
             let damage_after_soak = (modified_damage - soak_output.hits_total as i32).max(0);
             output.push_str(&format!(" ({} damage after soak)",damage_after_soak));
-            format_the_dice_report!(output, evade_output);
+            format_the_dice_report!(output, soak_output);
             output.push('\n');
           }
         }
