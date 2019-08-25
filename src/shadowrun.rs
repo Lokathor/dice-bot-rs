@@ -18,11 +18,11 @@ pub fn glitch_string(hits: u32, is_glitch: bool) -> &'static str {
 
 pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
   if pool_size == 0 {
-    return PoolRollOutput {
+    PoolRollOutput {
       hits_total: 0,
       is_glitch: false,
       roll_list: None,
-    };
+    }
   } else {
     let gen: &mut PCG32 = &mut global_gen();
     let mut dice_record: Vec<u8> = vec![];

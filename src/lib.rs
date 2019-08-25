@@ -1,12 +1,34 @@
 
 use randomize::*;
+use std::sync::{Mutex, MutexGuard};
+use lokacore::*;
 
 pub mod earthdawn;
 pub mod eote;
 pub mod shadowrun;
 
+const d4: RandRangeU32 = RandRangeU32::new(1,4);
+const d6: RandRangeU32 = RandRangeU32::new(1,6);
+const d8: RandRangeU32 = RandRangeU32::new(1,8);
+const d10: RandRangeU32 = RandRangeU32::new(1,10);
+const d12: RandRangeU32 = RandRangeU32::new(1,12);
+const d20: RandRangeU32 = RandRangeU32::new(1,20);
+
+static GLOBAL_GEN: Mutex<PCG32> = Mutex::new(PCG32::default());
+pub fn global_gen() -> MutexGuard<'static, PCG32> {
+  GLOBAL_GEN.lock().unwrap_or_else(|poison|poison.into_inner())
+}
+pub fn just_seed_the_global_gen() {
+  let gen: &mut PCG32 = &mut global_gen();
+  let mut arr: [u64; 2] = [0, 0];
+  match getrandom::getrandom(bytes_of_mut(&mut arr)) {
+    Ok(_) => *gen = PCG32::seed(arr[0], arr[1]),
+    Err(_) => *gen = PCG32::default()
+  }
+}
+
 trait ExplodingRange {
-  fn explode(&self, &mut PCG32) -> u32;
+  fn explode(&self, gen: &mut PCG32) -> u32;
 }
 
 impl ExplodingRange for RandRangeU32 {
@@ -33,7 +55,7 @@ pub fn basic_sum_str(s: &str) -> Option<i32> {
   let mut current_is_negative = s.chars().nth(0).unwrap() == '-';
   for ch in s.chars() {
     match ch {
-      '0' ... '9' => {
+      '0' ..= '9' => {
           current *= 10;
           current += ch.to_digit(10).unwrap() as i32;
       }

@@ -13,6 +13,8 @@ edition = "2018"
 [dependencies]
 serenity = "0.6"
 randomize = "3.0.0-rc.3"
+getrandom = "0.1"
+lokacore = "0.2"
 
 [profile.release]
 lto = true
