@@ -83,6 +83,7 @@ fn main() {
 
   let userid_str = &::std::env::var("USER_ID").expect("Could not obtain USER_ID");
   let userid : UserId = UserId(userid_str.parse::<u64>().unwrap());
+  let prefixes = &::std::env::var("PREFIXES").expect()
 
   client.with_framework(
     StandardFramework::new()
@@ -93,7 +94,7 @@ fn main() {
           .ignore_webhooks(true)
           .on_mention(Some(bot_id))
           .owners(vec![userid].into_iter().collect())
-          .prefixes(vec!["zztop"])
+          .prefixes(vec![","])
           .no_dm_prefix(true)
           .delimiter(" ")
           .case_insensitivity(true)
