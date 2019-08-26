@@ -53,6 +53,12 @@ impl EventHandler for Handler {
   }
 }
 
+group!({
+    name: "general",
+    options: {},
+    commands: [commands, ddate, after_sundown, dice, thaco, sigil_command, stat2e, champions]
+});
+
 fn main() {
   let mut client = Client::new(
     &::std::env::var("DISCORD_TOKEN").expect("Could not obtain DISCORD_TOKEN"),
@@ -95,6 +101,10 @@ fn main() {
       .bucket("ddate", |b| b.delay(60))
       .bucket("help", |b| b.delay(30))
       .bucket("complicated", |b| b.delay(5).time_span(30).limit(2))
+      .group(&GENERAL_GROUP)
+      .group(&SHADOWRUN_GROUP)
+      .group(&EOTE_GROUP)
+      .group(&EARTHDAWN_GROUP)
       .help(&MY_HELP)
   );
 

@@ -8,6 +8,12 @@ use serenity::{
   },
 };
 
+group!({
+  name: "shadowrun",
+  options: {},
+  commands: [shadowrun, shadowrun_edge, shadowrun_friend, shadowrun_foe, shadowrun_attack]
+});
+
 const SR_POOL_MAX_REPORT: u32 = 30;
 
 pub struct PoolRollOutput {

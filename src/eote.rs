@@ -8,6 +8,12 @@ use serenity::{
   },
 };
 
+group!({
+  name: "eote",
+  options: {},
+  commands: [eote]
+});
+
 #[derive(Debug, Clone, Copy)]
 pub enum Symbol {
   Success,
