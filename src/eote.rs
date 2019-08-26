@@ -5,11 +5,7 @@ use serenity::{
   framework::standard::macros::*,
   model::{
     channel::*,
-    gateway::*,
-    event::*,
-    id::*,
   },
-  prelude::*,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +43,7 @@ static ONE_LIGHT: &'static [Symbol] = &[Light];
 static TWO_LIGHT: &'static [Symbol] = &[Light, Light];
 
 fn blue(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample(gen) {
+  match D6.sample(gen) {
     1 | 2 => BLANK,
     3 => TWO_ADVANTAGE,
     4 => ONE_ADVANTAGE,
@@ -58,7 +54,7 @@ fn blue(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn black(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample(gen) {
+  match D6.sample(gen) {
     1 | 2 => BLANK,
     3 | 4 => ONE_FAILURE,
     5 | 6 => ONE_DISADVANTAGE,
@@ -67,7 +63,7 @@ fn black(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn green(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample(gen) {
+  match D8.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 => TWO_SUCCESS,
@@ -79,7 +75,7 @@ fn green(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn purple(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample(gen) {
+  match D8.sample(gen) {
     1 => BLANK,
     2 => ONE_FAILURE,
     3 => TWO_FAILURE,
@@ -91,7 +87,7 @@ fn purple(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn yellow(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
+  match D12.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 | 5 => TWO_SUCCESS,
@@ -104,7 +100,7 @@ fn yellow(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn red(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
+  match D12.sample(gen) {
     1 => BLANK,
     2 | 3 => ONE_FAILURE,
     4 | 5 => TWO_FAILURE,
@@ -117,7 +113,7 @@ fn red(gen: &mut PCG32) -> &'static [Symbol] {
 }
 
 fn white(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
+  match D12.sample(gen) {
     1 | 2 | 3 | 4 | 5 | 6 => ONE_DARK,
     7 => TWO_DARK,
     8 | 9 => ONE_LIGHT,

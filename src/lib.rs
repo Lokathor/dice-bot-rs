@@ -8,12 +8,12 @@ pub mod earthdawn;
 pub mod eote;
 pub mod shadowrun;
 
-pub const d4: RandRangeU32 = RandRangeU32::new(1,4);
-pub const d6: RandRangeU32 = RandRangeU32::new(1,6);
-pub const d8: RandRangeU32 = RandRangeU32::new(1,8);
-pub const d10: RandRangeU32 = RandRangeU32::new(1,10);
-pub const d12: RandRangeU32 = RandRangeU32::new(1,12);
-pub const d20: RandRangeU32 = RandRangeU32::new(1,20);
+pub const D4: RandRangeU32 = RandRangeU32::new(1,4);
+pub const D6: RandRangeU32 = RandRangeU32::new(1,6);
+pub const D8: RandRangeU32 = RandRangeU32::new(1,8);
+pub const D10: RandRangeU32 = RandRangeU32::new(1,10);
+pub const D12: RandRangeU32 = RandRangeU32::new(1,12);
+pub const D20: RandRangeU32 = RandRangeU32::new(1,20);
 
 lazy_static! {
   static ref GLOBAL_GEN: Mutex<PCG32> = Mutex::new(PCG32::default());

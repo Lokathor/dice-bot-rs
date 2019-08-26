@@ -5,11 +5,7 @@ use serenity::{
   framework::standard::macros::*,
   model::{
     channel::*,
-    gateway::*,
-    event::*,
-    id::*,
   },
-  prelude::*,
 };
 
 const SR_POOL_MAX_REPORT: u32 = 30;
@@ -44,7 +40,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
     let mut ones = 0;
     let mut this_is_a_normal_roll = true;
     while dice_rolled < pool_size {
-      let roll = d6.sample(gen);
+      let roll = D6.sample(gen);
       if roll == 1 && this_is_a_normal_roll {
         ones += 1;
       } else if roll >= 5 {

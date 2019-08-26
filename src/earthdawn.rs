@@ -5,11 +5,7 @@ use serenity::{
   framework::standard::macros::*,
   model::{
     channel::*,
-    gateway::*,
-    event::*,
-    id::*,
   },
-  prelude::*,
 };
 
 /// Rolls a step roll, according to the 4th edition chart.
@@ -19,27 +15,27 @@ pub fn step(gen: &mut PCG32, mut step: i32, karma: bool) -> i32 {
   } else {
     let mut total = 0;
     while step > 13 {
-      total += d12.explode(gen);
+      total += D12.explode(gen);
       step -= 7;
     }
     (total
       + match step {
-        1 => (d4.explode(gen) as i32 - 2).max(1) as u32,
-        2 => (d4.explode(gen) as i32 - 1).max(1) as u32,
-        3 => d4.explode(gen),
-        4 => d6.explode(gen),
-        5 => d8.explode(gen),
-        6 => d10.explode(gen),
-        7 => d12.explode(gen),
-        8 => d6.explode(gen) + d6.explode(gen),
-        9 => d8.explode(gen) + d6.explode(gen),
-        10 => d8.explode(gen) + d8.explode(gen),
-        11 => d10.explode(gen) + d8.explode(gen),
-        12 => d10.explode(gen) + d10.explode(gen),
-        13 => d12.explode(gen) + d10.explode(gen),
+        1 => (D4.explode(gen) as i32 - 2).max(1) as u32,
+        2 => (D4.explode(gen) as i32 - 1).max(1) as u32,
+        3 => D4.explode(gen),
+        4 => D6.explode(gen),
+        5 => D8.explode(gen),
+        6 => D10.explode(gen),
+        7 => D12.explode(gen),
+        8 => D6.explode(gen) + D6.explode(gen),
+        9 => D8.explode(gen) + D6.explode(gen),
+        10 => D8.explode(gen) + D8.explode(gen),
+        11 => D10.explode(gen) + D8.explode(gen),
+        12 => D10.explode(gen) + D10.explode(gen),
+        13 => D12.explode(gen) + D10.explode(gen),
         _other => unreachable!(),
       }
-      + if karma { d6.explode(gen) } else { 0 }) as i32
+      + if karma { D6.explode(gen) } else { 0 }) as i32
   }
 }
 

@@ -8,6 +8,7 @@ use randomize::*;
 extern crate serenity;
 use serenity::{
   client::*,
+  client::bridge::gateway::ShardManager,
   framework::standard::*,
   framework::standard::macros::*,
   model::{
@@ -20,11 +21,29 @@ use serenity::{
 };
 
 use std::collections::HashSet;
+use std::sync::Arc;
+use std::collections::HashMap;
+use std::fmt::Write;
 
 extern crate dice_bot;
 use dice_bot::{earthdawn::*, eote::*, shadowrun::*, *};
 
 use std::process::{Command, Stdio};
+
+// A container type is created for inserting into the Client's `data`, which
+// allows for data to be accessible across all events and framework commands, or
+// anywhere else that has a copy of the `data` Arc.
+struct ShardManagerContainer;
+
+impl TypeMapKey for ShardManagerContainer {
+    type Value = Arc<Mutex<ShardManager>>;
+}
+
+struct CommandCounter;
+
+impl TypeMapKey for CommandCounter {
+    type Value = HashMap<String, u64>;
+}
 
 pub struct Handler;
 
@@ -40,6 +59,12 @@ fn main() {
     Handler,
   )
   .expect("Could not create the client");
+
+  {
+    let mut data = client.data.write();
+    data.insert::<CommandCounter>(HashMap::default());
+    data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+  }
 
 
   // We will fetch your bot's id.
@@ -62,13 +87,14 @@ fn main() {
           .ignore_webhooks(true)
           .on_mention(Some(bot_id))
           .owners(vec![userid].into_iter().collect())
-          .prefixes(vec![","])
+          .prefixes(vec!["zztop"])
           .no_dm_prefix(true)
           .delimiter(" ")
           .case_insensitivity(true)
       })
       .bucket("ddate", |b| b.delay(60))
       .bucket("help", |b| b.delay(30))
+      .bucket("complicated", |b| b.delay(5).time_span(30).limit(2))
       .help(&MY_HELP)
   );
 
@@ -89,6 +115,28 @@ fn my_help(
     help_commands::with_embeds(context, msg, args, help_options, groups, owners)
 }
 
+// Commands can be created via the attribute `#[command]` macro.
+#[command]
+// Options are passed via subsequent attributes.
+// Make this command use the "complicated" bucket.
+#[bucket = "complicated"]
+fn commands(ctx: &mut Context, msg: &Message) -> CommandResult {
+    let mut contents = "Commands used:\n".to_string();
+
+    let data = ctx.data.read();
+    let counter = data.get::<CommandCounter>().expect("Expected CommandCounter in ShareMap.");
+
+    for (k, v) in counter {
+        let _ = write!(contents, "- {name}: {amount}\n", name=k, amount=v);
+    }
+
+    if let Err(why) = msg.channel_id.say(&ctx.http, &contents) {
+        println!("Error sending message: {:?}", why);
+    }
+
+    Ok(())
+}
+
 /// Opens a child process to check the `ddate` value.
 fn ddate_process() -> Option<String> {
   String::from_utf8(
@@ -106,7 +154,7 @@ fn ddate_process() -> Option<String> {
 #[command]
 #[description = "https://en.wikipedia.org/wiki/Discordian_calendar"]
 #[bucket = "ddate"]
-fn ddate(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+fn ddate(_ctx: &mut Context, msg: &Message, _: Args) -> CommandResult {
   ddate_process().map(|date| {
     if let Err(why) = msg.channel_id.say(&_ctx.http, date) {
       println!("Error sending message: {:?}", why);
@@ -130,7 +178,7 @@ fn after_sundown(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
       let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
       dice_record.push_str(" `(");
       for _ in 0 .. dice_count {
-        let roll = d6.sample(gen);
+        let roll = D6.sample(gen);
         if roll >= 5 {
           hits += 1;
         }
@@ -171,7 +219,7 @@ fn dice(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   'exprloop: for dice_expression_str in args.rest().split_whitespace().take(20) {
-    let mut plus_only_form = dice_expression_str.replace("-","+-");
+    let plus_only_form = dice_expression_str.replace("-","+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
     for sub_expression in plus_only_form.split('+').take(70) {
@@ -223,12 +271,12 @@ fn dice(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         sub_expressions.push(format!("{}", num_dice));
       } else {
         let range = match num_sides {
-          4 => d4,
-          6 => d6,
-          8 => d8,
-          10 => d10,
-          12 => d12,
-          20 => d20,
+          4 => D4,
+          6 => D6,
+          8 => D8,
+          10 => D10,
+          12 => D12,
+          20 => D20,
           _ => RandRangeU32::new(1, num_sides)
         };
         if num_dice > 0 {
@@ -277,7 +325,7 @@ fn thaco(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   for thaco_value in args.rest().split_whitespace().flat_map(basic_sum_str).take(20) {
-    let roll = d20.sample(gen) as i32;
+    let roll = D20.sample(gen) as i32;
     output.push_str(&format!("THACO {}: Rolled {}, Hits AC {} or greater.\n", thaco_value, roll, thaco_value - roll));
   }
   output.pop();
@@ -302,8 +350,8 @@ fn sigil_command(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
     if x > 0 {
       let mut total : i32 = 0;
       for _ in 0 .. x {
-        total += d6.sample(gen) as i32;
-        total -= d6.sample(gen) as i32;
+        total += D6.sample(gen) as i32;
+        total -= D6.sample(gen) as i32;
       }
       output.push_str(&format!("Rolling Sigil {}: {}\n", x, total.abs()));
     } else {
@@ -330,7 +378,7 @@ fn stat2e(_ctx: &mut Context, msg: &Message, _args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   let roll = |gen: &mut PCG32| {
-    4 + d4.sample(gen) + d4.sample(gen) + d4.sample(gen) + d4.sample(gen)
+    4 + D4.sample(gen) + D4.sample(gen) + D4.sample(gen) + D4.sample(gen)
   };
   output.push_str(&format!("Str: {}\n", roll(gen)));
   output.push_str(&format!("Dex: {}\n", roll(gen)));
@@ -356,7 +404,7 @@ fn champions(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   for term in terms {
     let mut rolls = [0; 3];
     for roll_mut in rolls.iter_mut() {
-      *roll_mut = d6.sample(gen) as i32;
+      *roll_mut = D6.sample(gen) as i32;
     }
     output.push_str(&format!("Rolling Champions {}: {}, [{},{},{}]\n",
       term,
