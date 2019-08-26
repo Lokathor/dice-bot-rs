@@ -1,4 +1,16 @@
 use super::*;
+use serenity::{
+  client::*,
+  framework::standard::*,
+  framework::standard::macros::*,
+  model::{
+    channel::*,
+    gateway::*,
+    event::*,
+    id::*,
+  },
+  prelude::*,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Symbol {
@@ -114,10 +126,14 @@ fn white(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-command!(eote(_ctx, msg, args) {
+#[command]
+#[aliases("eote")]
+#[description = "Rolls EotE dice (b=black, u=blue)"]
+#[usage = "EXPRESSION [...]"]
+fn eote(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  let terms: Vec<&str> = args.full().split_whitespace().collect();
+  let terms: Vec<&str> = args.rest().split_whitespace().collect();
   'termloop: for term in terms {
     let mut pool_string = String::new();
     for ch in term.chars() {
@@ -212,12 +228,13 @@ command!(eote(_ctx, msg, args) {
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   } else {
-    if let Err(why) = msg.channel_id.say("usage: eote POOL (black = b, blue = u)") {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, "usage: eote POOL (black = b, blue = u)") {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}

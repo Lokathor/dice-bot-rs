@@ -1,7 +1,8 @@
-
 use randomize::*;
 use std::sync::{Mutex, MutexGuard};
 use lokacore::*;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod earthdawn;
 pub mod eote;
@@ -14,7 +15,10 @@ const d10: RandRangeU32 = RandRangeU32::new(1,10);
 const d12: RandRangeU32 = RandRangeU32::new(1,12);
 const d20: RandRangeU32 = RandRangeU32::new(1,20);
 
-static GLOBAL_GEN: Mutex<PCG32> = Mutex::new(PCG32::default());
+lazy_static! {
+  static ref GLOBAL_GEN: Mutex<PCG32> = Mutex::new(PCG32::default());
+}
+
 pub fn global_gen() -> MutexGuard<'static, PCG32> {
   GLOBAL_GEN.lock().unwrap_or_else(|poison|poison.into_inner())
 }

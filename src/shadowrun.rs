@@ -1,4 +1,16 @@
 use super::*;
+use serenity::{
+  client::*,
+  framework::standard::*,
+  framework::standard::macros::*,
+  model::{
+    channel::*,
+    gateway::*,
+    event::*,
+    id::*,
+  },
+  prelude::*,
+};
 
 const SR_POOL_MAX_REPORT: u32 = 30;
 
@@ -101,37 +113,51 @@ macro_rules! do_the_dice_pool {
   }};
 }
 
-command!(shadowrun(_ctx, msg, args) {
+#[command]
+#[description = "Rolls Shadowrun 4e style (up to 10)"]
+#[aliases("sr")]
+#[usage = "DICE [...]"]
+fn shadowrun(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for dice_count in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
     format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, false, "dice"));
     output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(shadowrun_edge(_ctx, msg, args) {
+#[command]
+#[aliases("sre")]
+#[description = "Rolls Shadowrun 4e with 6-again (up to 10)"]
+#[usage = "DICE [...]"]
+fn shadowrun_edge(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for dice_count in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
     format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, true, "dice with edge (6-again)"));
     output.push('\n');
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(shadowrun_friend(_ctx, msg, args) {
+#[command]
+#[aliases("friend")]
+#[description = "Rolls up a conjured buddy (Spirit / Sprite)"]
+#[usage = "CONJURE FORCE SOAK"]
+fn shadowrun_friend(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [conjure, force, soak] => {
       let conjure = *conjure;
@@ -171,14 +197,19 @@ command!(shadowrun_friend(_ctx, msg, args) {
       output.push_str("Usage: CONJURE FORCE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
+  if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
     println!("Error sending message: {:?}", why);
   }
-});
+  Ok(())
+}
 
-command!(shadowrun_foe(_ctx, msg, args) {
+#[command]
+#[description = "Binds a conjured buddy (Spirit / Sprite)"]
+#[aliases("foe")]
+#[usage = "BINDING FORCE SOAK"]
+fn shadowrun_foe(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [bind, force, soak] => {
       let bind = *bind;
@@ -223,14 +254,19 @@ command!(shadowrun_foe(_ctx, msg, args) {
       output.push_str("Usage: CONJURE FORCE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
+  if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
     println!("Error sending message: {:?}", why);
   }
-});
+  Ok(())
+}
 
-command!(shadowrun_attack(_ctx, msg, args) {
+#[command]
+#[description = "Rolls a Shadowrun 4e attack cycle"]
+#[usage = "ATTACK EVADE DAMAGE SOAK"]
+#[aliases("sra")]
+fn shadowrun_attack(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [attack, evade, damage, soak] => {
       if *attack < 1 {
@@ -278,7 +314,8 @@ command!(shadowrun_attack(_ctx, msg, args) {
       output.push_str("Usage: ATTACK EVADE DAMAGE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
+  if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
     println!("Error sending message: {:?}", why);
   }
-});
+  Ok(())
+}
