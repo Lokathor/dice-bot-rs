@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+//#![feature(const_fn)]
 
 extern crate randomize;
 use randomize::*;
@@ -6,21 +7,43 @@ use randomize::*;
 #[macro_use]
 extern crate serenity;
 use serenity::{
+  client::*,
+  client::bridge::gateway::ShardManager,
   framework::standard::*,
+  framework::standard::macros::*,
   model::{
-    channel::{Message, ReactionType},
-    gateway::Ready,
-    id::UserId,
+    channel::*,
+    gateway::*,
+    event::*,
+    id::*,
   },
   prelude::*,
 };
+
+use std::collections::HashSet;
+use std::sync::Arc;
+use std::collections::HashMap;
+use std::fmt::Write;
 
 extern crate dice_bot;
 use dice_bot::{earthdawn::*, eote::*, shadowrun::*, *};
 
 use std::process::{Command, Stdio};
 
-pub const LOKATHOR_ID: UserId = UserId(244106113321140224);
+// A container type is created for inserting into the Client's `data`, which
+// allows for data to be accessible across all events and framework commands, or
+// anywhere else that has a copy of the `data` Arc.
+struct ShardManagerContainer;
+
+impl TypeMapKey for ShardManagerContainer {
+    type Value = Arc<Mutex<ShardManager>>;
+}
+
+struct CommandCounter;
+
+impl TypeMapKey for CommandCounter {
+    type Value = HashMap<String, u64>;
+}
 
 pub struct Handler;
 
@@ -30,76 +53,99 @@ impl EventHandler for Handler {
   }
 }
 
+group!({
+    name: "general",
+    options: {},
+    commands: [commands, ddate, after_sundown, dice, thaco, sigil_command, stat2e, champions]
+});
+
 fn main() {
   let mut client = Client::new(
     &::std::env::var("DISCORD_TOKEN").expect("Could not obtain DISCORD_TOKEN"),
     Handler,
   )
   .expect("Could not create the client");
+
+  {
+    let mut data = client.data.write();
+    data.insert::<CommandCounter>(HashMap::default());
+    data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+  }
+
+
+  // We will fetch your bot's id.
+  let bot_id = match client.cache_and_http.http.get_current_application_info() {
+      Ok(info) => {
+          info.id
+      },
+      Err(why) => panic!("Could not access application info: {:?}", why),
+  };
+
+  let userid_str = &::std::env::var("USER_ID").expect("Could not obtain USER_ID");
+  let userid : UserId = UserId(userid_str.parse::<u64>().unwrap());
+  let prefixes = &::std::env::var("PREFIXES").expect()
+
   client.with_framework(
     StandardFramework::new()
       .configure(|c| {
         c.allow_dm(true)
-          .allow_whitespace(true)
+          .with_whitespace(WithWhiteSpace { prefixes: true, groups: true, commands: true })
           .ignore_bots(true)
           .ignore_webhooks(true)
-          .on_mention(true)
-          .owners(vec![LOKATHOR_ID].into_iter().collect())
+          .on_mention(Some(bot_id))
+          .owners(vec![userid].into_iter().collect())
           .prefixes(vec![","])
           .no_dm_prefix(true)
           .delimiter(" ")
           .case_insensitivity(true)
       })
-      .simple_bucket("ddate", 60)
-      .simple_bucket("help", 30)
-      .help(help_commands::with_embeds)
-      .command("ddate", |c| c.cmd(ddate).desc("https://en.wikipedia.org/wiki/Discordian_calendar").bucket("ddate"))
-      // Shadowrun
-      .command("sr", |c| c.cmd(shadowrun).desc("Rolls Shadowrun 4e style (up to 10)").usage("DICE [...]"))
-      .command("sre", |c| {
-        c.cmd(shadowrun_edge)
-          .desc("Rolls Shadowrun 4e with 6-again (up to 10)")
-          .usage("DICE [...]")
-      })
-      .command("sra", |c| {
-        c.cmd(shadowrun_attack).desc("Rolls a Shadowrun 4e attack cycle").usage("ATTACK EVADE DAMAGE SOAK")
-      })
-      .command("friend", |c| {
-        c.cmd(shadowrun_friend)
-          .desc("Rolls up a conjured buddy (Spirit / Sprite)")
-          .usage("CONJURE FORCE SOAK")
-      })
-      .command("foe", |c| {
-        c.cmd(shadowrun_foe)
-          .desc("Binds a conjured buddy (Spirit / Sprite)")
-          .usage("BINDING FORCE SOAK")
-      })
-      // Earthdawn
-      .command("ed", |c| {
-        c.cmd(earthdawn).desc("Rolls an Earthdawn 4e step (up to 10)").usage("STEP [...]")
-      })
-      .command("edk", |c| {
-        c.cmd(earthdawn_karma)
-          .desc("Rolls an Earthdawn 4e step with karma (up to 10)")
-          .usage("STEP [...]")
-      })
-      .command("edt", |c| c.cmd(earthdawn_target).desc("Rolls an Earthdawn 4e step").usage("STEP TARGET"))
-      // Other
-      .command("as", |c| c.cmd(after_sundown).desc("Rolls After Sundown style").usage("DICE [...]"))
-      .command("dice", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
-      .command("roll", |c| c.cmd(dice).desc("Rolls a standard dice expression").usage("EXPRESSION [...]"))
-      .command("thaco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
-      .command("taco", |c| c.cmd(thaco).desc("Does a THACO attack roll").usage("THACO [...]"))
-      .command("eote", |c| c.cmd(eote).desc("Rolls EotE dice (b=black, u=blue)").usage("EXPRESSION [...]"))
-      .command("champ", |c| c.cmd(champions).desc("Rolls a Champions roll").usage("EXPRESSION [...]"))
-      .command("stat2e", |c| c.cmd(stat2e).desc("Rolls a 2e stat array"))
-      // User Commands
-      .command("sigil", |c| c.cmd(sigil_command).desc("It does a mystery thing that Sigil decided upon").usage("BASIC_SUM_STRING [...]"))
+      .bucket("ddate", |b| b.delay(60))
+      .bucket("help", |b| b.delay(30))
+      .bucket("complicated", |b| b.delay(5).time_span(30).limit(2))
+      .group(&GENERAL_GROUP)
+      .group(&SHADOWRUN_GROUP)
+      .group(&EOTE_GROUP)
+      .group(&EARTHDAWN_GROUP)
+      .help(&MY_HELP)
   );
 
   if let Err(why) = client.start() {
     println!("Client::start error: {:?}", why);
   }
+}
+
+#[help]
+fn my_help(
+    context: &mut Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>
+) -> CommandResult {
+    help_commands::with_embeds(context, msg, args, help_options, groups, owners)
+}
+
+// Commands can be created via the attribute `#[command]` macro.
+#[command]
+// Options are passed via subsequent attributes.
+// Make this command use the "complicated" bucket.
+#[bucket = "complicated"]
+fn commands(ctx: &mut Context, msg: &Message) -> CommandResult {
+    let mut contents = "Commands used:\n".to_string();
+
+    let data = ctx.data.read();
+    let counter = data.get::<CommandCounter>().expect("Expected CommandCounter in ShareMap.");
+
+    for (k, v) in counter {
+        let _ = write!(contents, "- {name}: {amount}\n", name=k, amount=v);
+    }
+
+    if let Err(why) = msg.channel_id.say(&ctx.http, &contents) {
+        println!("Error sending message: {:?}", why);
+    }
+
+    Ok(())
 }
 
 /// Opens a child process to check the `ddate` value.
@@ -116,18 +162,26 @@ fn ddate_process() -> Option<String> {
   .ok()
 }
 
-command!(ddate(_ctx, msg, _args) {
+#[command]
+#[description = "https://en.wikipedia.org/wiki/Discordian_calendar"]
+#[bucket = "ddate"]
+fn ddate(_ctx: &mut Context, msg: &Message, _: Args) -> CommandResult {
   ddate_process().map(|date| {
-    if let Err(why) = msg.channel_id.say(date) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, date) {
       println!("Error sending message: {:?}", why);
     }
   });
-});
+  Ok(())
+}
 
-command!(after_sundown(_ctx, msg, args) {
+#[command]
+#[aliases("as")]
+#[description = "Rolls After Sundown style"]
+#[usage = "DICE [...]"]
+fn after_sundown(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  for dice_count in args.full().split_whitespace().flat_map(basic_sum_str).take(10) {
+  for dice_count in args.rest().split_whitespace().flat_map(basic_sum_str).take(10) {
     let dice_count = dice_count.max(0).min(5_000) as u32;
     if dice_count > 0 {
       let mut hits = 0;
@@ -135,7 +189,7 @@ command!(after_sundown(_ctx, msg, args) {
       let mut dice_record = String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
       dice_record.push_str(" `(");
       for _ in 0 .. dice_count {
-        let roll = d6.sample(gen);
+        let roll = D6.sample(gen);
         if roll >= 5 {
           hits += 1;
         }
@@ -153,7 +207,7 @@ command!(after_sundown(_ctx, msg, args) {
       output.push_str(&format!("Rolled {} dice: {} hit{}{}", dice_count, hits, s_for_hits, dice_report_output));
     } else {
       let output = format!("No dice to roll!");
-      if let Err(why) = msg.channel_id.say(output) {
+      if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
         println!("Error sending message: {:?}", why);
       }
     }
@@ -161,17 +215,22 @@ command!(after_sundown(_ctx, msg, args) {
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(dice(_ctx, msg, args) {
+#[command]
+#[aliases("roll", "dice")]
+#[description = "Rolls a standard dice expression"]
+#[usage = "EXPRESSION [...]"]
+fn dice(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  'exprloop: for dice_expression_str in args.full().split_whitespace().take(20) {
-    let mut plus_only_form = dice_expression_str.replace("-","+-");
+  'exprloop: for dice_expression_str in args.rest().split_whitespace().take(20) {
+    let plus_only_form = dice_expression_str.replace("-","+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
     for sub_expression in plus_only_form.split('+').take(70) {
@@ -223,13 +282,13 @@ command!(dice(_ctx, msg, args) {
         sub_expressions.push(format!("{}", num_dice));
       } else {
         let range = match num_sides {
-          4 => d4,
-          6 => d6,
-          8 => d8,
-          10 => d10,
-          12 => d12,
-          20 => d20,
-          _ => RandRangeU32::new(1..=num_sides)
+          4 => D4,
+          6 => D6,
+          8 => D8,
+          10 => D10,
+          12 => D12,
+          20 => D20,
+          _ => RandRangeU32::new(1, num_sides)
         };
         if num_dice > 0 {
           for _ in 0 .. num_dice {
@@ -262,38 +321,48 @@ command!(dice(_ctx, msg, args) {
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(thaco(_ctx, msg, args) {
+#[command]
+#[description = "Does a THACO attack roll"]
+#[usage = "THACO [...]"]
+#[aliases("thaco", "taco")]
+fn thaco(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  for thaco_value in args.full().split_whitespace().flat_map(basic_sum_str).take(20) {
-    let roll = d20.sample(gen) as i32;
+  for thaco_value in args.rest().split_whitespace().flat_map(basic_sum_str).take(20) {
+    let roll = D20.sample(gen) as i32;
     output.push_str(&format!("THACO {}: Rolled {}, Hits AC {} or greater.\n", thaco_value, roll, thaco_value - roll));
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(sigil_command(_ctx, msg, args) {
+#[command]
+#[description = "It does a mystery thing that Sigil decided upon"]
+#[aliases("sigil")]
+#[usage = "BASIC_SUM_STRING [...]"]
+fn sigil_command(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
   for term in terms {
     let x = term.abs();
     if x > 0 {
-      let mut total = 0;
+      let mut total : i32 = 0;
       for _ in 0 .. x {
-        total += d6.sample(gen) as i32;
-        total -= d6.sample(gen) as i32;
+        total += D6.sample(gen) as i32;
+        total -= D6.sample(gen) as i32;
       }
       output.push_str(&format!("Rolling Sigil {}: {}\n", x, total.abs()));
     } else {
@@ -302,21 +371,25 @@ command!(sigil_command(_ctx, msg, args) {
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   } else {
-    if let Err(why) = msg.channel_id.say("usage: sigil NUMBER") {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, "usage: sigil NUMBER") {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
 
-command!(stat2e(_ctx, msg, _args) {
+#[command]
+#[description = "Rolls a 2e stat array"]
+#[aliases("stat2e")]
+fn stat2e(_ctx: &mut Context, msg: &Message, _args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
   let roll = |gen: &mut PCG32| {
-    4 + d4.sample(gen) + d4.sample(gen) + d4.sample(gen) + d4.sample(gen)
+    4 + D4.sample(gen) + D4.sample(gen) + D4.sample(gen) + D4.sample(gen)
   };
   output.push_str(&format!("Str: {}\n", roll(gen)));
   output.push_str(&format!("Dex: {}\n", roll(gen)));
@@ -325,19 +398,24 @@ command!(stat2e(_ctx, msg, _args) {
   output.push_str(&format!("Wis: {}\n", roll(gen)));
   output.push_str(&format!("Cha: {}\n", roll(gen)));
   output.pop();
-  if let Err(why) = msg.channel_id.say(output) {
+  if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
     println!("Error sending message: {:?}", why);
   }
-});
+  Ok(())
+}
 
-command!(champions(_ctx, msg, args) {
+#[command]
+#[aliases("champ")]
+#[description = "Rolls a Champions roll"]
+#[usage = "EXPRESSION [...]"]
+fn champions(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
   for term in terms {
     let mut rolls = [0; 3];
     for roll_mut in rolls.iter_mut() {
-      *roll_mut = d6.sample(gen) as i32;
+      *roll_mut = D6.sample(gen) as i32;
     }
     output.push_str(&format!("Rolling Champions {}: {}, [{},{},{}]\n",
       term,
@@ -350,12 +428,13 @@ command!(champions(_ctx, msg, args) {
   }
   output.pop();
   if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
       println!("Error sending message: {:?}", why);
     }
   } else {
-    if let Err(why) = msg.channel_id.say("usage: sigil NUMBER") {
+    if let Err(why) = msg.channel_id.say(&_ctx.http, "usage: sigil NUMBER") {
       println!("Error sending message: {:?}", why);
     }
   }
-});
+  Ok(())
+}
