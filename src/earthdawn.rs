@@ -1,11 +1,8 @@
 use super::*;
 use serenity::{
   client::*,
-  framework::standard::*,
-  framework::standard::macros::*,
-  model::{
-    channel::*,
-  },
+  framework::standard::{macros::*, *},
+  model::channel::*,
 };
 
 group!({
@@ -53,7 +50,12 @@ fn earthdawn(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
 
-  for step_value in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for step_value in args
+    .rest()
+    .split_whitespace()
+    .take(10)
+    .filter_map(basic_sum_str)
+  {
     let step_roll = step(gen, step_value, false);
     output.push_str(&format!("Rolled step {}: {}\n", step_value, step_roll));
   }
@@ -75,9 +77,17 @@ fn earthdawn_karma(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResu
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
 
-  for step_value in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for step_value in args
+    .rest()
+    .split_whitespace()
+    .take(10)
+    .filter_map(basic_sum_str)
+  {
     let step_roll = step(gen, step_value, true);
-    output.push_str(&format!("Rolled step {} with karma: {}\n", step_value, step_roll));
+    output.push_str(&format!(
+      "Rolled step {} with karma: {}\n",
+      step_value, step_roll
+    ));
   }
   output.pop(); // delete the trailing newline
 
@@ -96,7 +106,11 @@ fn earthdawn_karma(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResu
 fn earthdawn_target(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let gen: &mut PCG32 = &mut global_gen();
 
-  let inputs: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
+  let inputs: Vec<i32> = args
+    .rest()
+    .split_whitespace()
+    .filter_map(basic_sum_str)
+    .collect();
   match &inputs as &[i32] {
     [step_value, target] => {
       let step_roll = step(gen, *step_value, false);
@@ -105,9 +119,11 @@ fn earthdawn_target(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
       } else {
         0
       };
-      let es_for_successes = if successes != 1 { "es" } else { ""};
-      let output = format!("Rolled step {} vs {}: got {} ({} success{})",
-        step_value, target, step_roll, successes, es_for_successes);
+      let es_for_successes = if successes != 1 { "es" } else { "" };
+      let output = format!(
+        "Rolled step {} vs {}: got {} ({} success{})",
+        step_value, target, step_roll, successes, es_for_successes
+      );
       if let Err(why) = msg.channel_id.say(&_ctx.http, output) {
         println!("Error sending message: {:?}", why);
       }

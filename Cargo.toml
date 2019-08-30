@@ -12,7 +12,7 @@ edition = "2018"
 
 [dependencies]
 serenity = "0.6.3"
-randomize = "3.0.0-rc.3"
+randomize = "3.0.0"
 getrandom = "0.1"
 lokacore = "0.2"
 lazy_static = "1.4.0"

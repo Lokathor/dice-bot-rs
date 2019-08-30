@@ -1,11 +1,8 @@
 use super::*;
 use serenity::{
   client::*,
-  framework::standard::*,
-  framework::standard::macros::*,
-  model::{
-    channel::*,
-  },
+  framework::standard::{macros::*, *},
+  model::channel::*,
 };
 
 group!({
@@ -121,8 +118,16 @@ macro_rules! do_the_dice_pool {
 #[usage = "DICE [...]"]
 fn shadowrun(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  for dice_count in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
-    format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, false, "dice"));
+  for dice_count in args
+    .rest()
+    .split_whitespace()
+    .take(10)
+    .filter_map(basic_sum_str)
+  {
+    format_the_dice_report!(
+      output,
+      do_the_dice_pool!(output, "Rolled", dice_count, false, "dice")
+    );
     output.push('\n');
   }
   output.pop();
@@ -140,8 +145,22 @@ fn shadowrun(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 #[usage = "DICE [...]"]
 fn shadowrun_edge(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  for dice_count in args.rest().split_whitespace().take(10).filter_map(basic_sum_str) {
-    format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, true, "dice with edge (6-again)"));
+  for dice_count in args
+    .rest()
+    .split_whitespace()
+    .take(10)
+    .filter_map(basic_sum_str)
+  {
+    format_the_dice_report!(
+      output,
+      do_the_dice_pool!(
+        output,
+        "Rolled",
+        dice_count,
+        true,
+        "dice with edge (6-again)"
+      )
+    );
     output.push('\n');
   }
   output.pop();
@@ -159,7 +178,11 @@ fn shadowrun_edge(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResul
 #[usage = "CONJURE FORCE SOAK"]
 fn shadowrun_friend(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args
+    .rest()
+    .split_whitespace()
+    .filter_map(basic_sum_str)
+    .collect();
   match &terms as &[i32] {
     [conjure, force, soak] => {
       let conjure = *conjure;
@@ -170,18 +193,23 @@ fn shadowrun_friend(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
       } else if force < 1 {
         output.push_str("There's no Force there!")
       } else {
-        let conjure_output = do_the_dice_pool!(output, "You rolled", conjure, false, "dice to conjure");
+        let conjure_output =
+          do_the_dice_pool!(output, "You rolled", conjure, false, "dice to conjure");
         {
           format_the_dice_report!(output, conjure_output);
           output.push('\n');
         }
         let conjure_hits = conjure_output.hits_total;
         //
-        let force_output = do_the_dice_pool!(output, "Your friend rolled", force, false, "dice to resist");
+        let force_output =
+          do_the_dice_pool!(output, "Your friend rolled", force, false, "dice to resist");
         {
           let services_owed = (conjure_hits as i32 - force_output.hits_total as i32).max(0);
           let s_for_services_owed = if services_owed != 1 { "s" } else { "" };
-          output.push_str(&format!(" ({} service{} owed)", services_owed, s_for_services_owed));
+          output.push_str(&format!(
+            " ({} service{} owed)",
+            services_owed, s_for_services_owed
+          ));
           format_the_dice_report!(output, force_output);
           output.push('\n');
         }
@@ -189,7 +217,7 @@ fn shadowrun_friend(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
         //
         let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
-          let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
+          let net_drain = ((force / 2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
           format_the_dice_report!(output, soak_output);
         }
@@ -211,7 +239,11 @@ fn shadowrun_friend(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
 #[usage = "BINDING FORCE SOAK"]
 fn shadowrun_foe(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args
+    .rest()
+    .split_whitespace()
+    .filter_map(basic_sum_str)
+    .collect();
   match &terms as &[i32] {
     [bind, force, soak] => {
       let bind = *bind;
@@ -229,15 +261,24 @@ fn shadowrun_foe(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
         }
         let bind_hits = bind_output.hits_total;
         //
-        let force_dice = force*2;
-        let force_output = do_the_dice_pool!(output, "Your victim rolled", force_dice, false, "dice to resist");
+        let force_dice = force * 2;
+        let force_output = do_the_dice_pool!(
+          output,
+          "Your victim rolled",
+          force_dice,
+          false,
+          "dice to resist"
+        );
         {
           let binding_net_hits = (bind_hits as i32 - force_output.hits_total as i32).max(0);
           if binding_net_hits == 0 {
             output.push_str(" (failed to bind!)\n");
           } else {
             let s_for_binding_net_hits = if binding_net_hits > 1 { "s" } else { "" };
-            output.push_str(&format!(" ({} net hit{})", binding_net_hits, s_for_binding_net_hits));
+            output.push_str(&format!(
+              " ({} net hit{})",
+              binding_net_hits, s_for_binding_net_hits
+            ));
             format_the_dice_report!(output, force_output);
             output.push('\n');
           }
@@ -246,7 +287,7 @@ fn shadowrun_foe(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
         //
         let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
-          let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
+          let net_drain = ((force / 2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
           format_the_dice_report!(output, soak_output);
         }
@@ -268,7 +309,11 @@ fn shadowrun_foe(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
 #[aliases("sra")]
 fn shadowrun_attack(_ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
   let mut output = String::new();
-  let terms: Vec<i32> = args.rest().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> = args
+    .rest()
+    .split_whitespace()
+    .filter_map(basic_sum_str)
+    .collect();
   match &terms as &[i32] {
     [attack, evade, damage, soak] => {
       if *attack < 1 {
@@ -279,7 +324,8 @@ fn shadowrun_attack(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
         let damage = *damage as u32;
         let soak = (*soak).max(0) as u32;
         //
-        let attack_output = do_the_dice_pool!(output, "You rolled", attack, false, "dice to attack");
+        let attack_output =
+          do_the_dice_pool!(output, "You rolled", attack, false, "dice to attack");
         {
           format_the_dice_report!(output, attack_output);
           output.push('\n');
@@ -298,14 +344,17 @@ fn shadowrun_attack(_ctx: &mut Context, msg: &Message, args: Args) -> CommandRes
         } else {
           let s_for_net_hits = if attack_net_hits != 1 { "s" } else { "" };
           let modified_damage = damage as i32 + attack_net_hits;
-          output.push_str(&format!(" ({} net hit{}, modified damage is {})",attack_net_hits, s_for_net_hits, modified_damage));
+          output.push_str(&format!(
+            " ({} net hit{}, modified damage is {})",
+            attack_net_hits, s_for_net_hits, modified_damage
+          ));
           format_the_dice_report!(output, evade_output);
           output.push('\n');
           //
           let soak_output = do_the_dice_pool!(output, "They rolled", soak, false, "dice to soak");
           {
             let damage_after_soak = (modified_damage - soak_output.hits_total as i32).max(0);
-            output.push_str(&format!(" ({} damage after soak)",damage_after_soak));
+            output.push_str(&format!(" ({} damage after soak)", damage_after_soak));
             format_the_dice_report!(output, soak_output);
             output.push('\n');
           }
