@@ -1,6 +1,6 @@
 [package]
 name = "dice-bot"
-version = "0.6.0"
+version = "0.6.1-alpha.0"
 authors = ["Lokathor <zefria@gmail.com>"]
 repository = "https://github.com/Lokathor/dice-bot-rs"
 readme = "README.md"
