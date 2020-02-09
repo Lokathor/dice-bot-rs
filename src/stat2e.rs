@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// Rolls 4d4+4 dix times.

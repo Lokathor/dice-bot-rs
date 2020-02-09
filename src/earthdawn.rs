@@ -31,63 +31,57 @@ pub fn step(gen: &mut PCG32, mut step: i32, karma: bool) -> i32 {
   }
 }
 
-command!(earthdawn(_ctx, msg, args) {
+pub fn earthdawn(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
 
-  for step_value in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for step_value in args.split_whitespace().take(10).filter_map(basic_sum_str) {
     let step_roll = step(gen, step_value, false);
-    output.push_str(&format!("Rolled step {}: {}\n", step_value, step_roll));
+    writeln!(output, "Rolled step {}: {}", step_value, step_roll).unwrap();
   }
   output.pop(); // delete the trailing newline
 
-  if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
-      println!("Error sending message: {:?}", why);
-    }
+  if output.is_empty() {
+    String::from("No dice expressions given.")
+  } else {
+    output
   }
-});
+}
 
-command!(earthdawn_karma(_ctx, msg, args) {
+pub fn earthdawn_karma(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
 
-  for step_value in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
+  for step_value in args.split_whitespace().take(10).filter_map(basic_sum_str) {
     let step_roll = step(gen, step_value, true);
-    output.push_str(&format!("Rolled step {} with karma: {}\n", step_value, step_roll));
+    writeln!(output, "Rolled step {} with karma: {}", step_value, step_roll)
+      .unwrap();
   }
   output.pop(); // delete the trailing newline
 
-  if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
-      println!("Error sending message: {:?}", why);
-    }
+  if output.is_empty() {
+    String::from("No dice expressions given.")
+  } else {
+    output
   }
-});
+}
 
-command!(earthdawn_target(_ctx, msg, args) {
+pub fn earthdawn_target(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
 
-  let inputs: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let inputs: Vec<i32> =
+    args.split_whitespace().filter_map(basic_sum_str).collect();
   match &inputs as &[i32] {
     [step_value, target] => {
       let step_roll = step(gen, *step_value, false);
-      let successes = if step_roll > *target {
-        1 + (step_roll - target) / 5
-      } else {
-        0
-      };
-      let es_for_successes = if successes != 1 { "es" } else { ""};
-      let output = format!("Rolled step {} vs {}: got {} ({} success{})",
-        step_value, target, step_roll, successes, es_for_successes);
-      if let Err(why) = msg.channel_id.say(output) {
-        println!("Error sending message: {:?}", why);
-      }
+      let successes =
+        if step_roll > *target { 1 + (step_roll - target) / 5 } else { 0 };
+      let es_for_successes = if successes != 1 { "es" } else { "" };
+      format!(
+        "Rolled step {} vs {}: got {} ({} success{})",
+        step_value, target, step_roll, successes, es_for_successes
+      )
     }
-    _ => {
-      if let Err(why) = msg.channel_id.say("usage: STEP TARGET") {
-        println!("Error sending message: {:?}", why);
-      }
-    }
+    _ => String::from("usage: STEP TARGET"),
   }
-});
+}

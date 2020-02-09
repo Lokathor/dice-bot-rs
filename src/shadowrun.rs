@@ -18,11 +18,7 @@ pub fn glitch_string(hits: u32, is_glitch: bool) -> &'static str {
 
 pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
   if pool_size == 0 {
-    return PoolRollOutput {
-      hits_total: 0,
-      is_glitch: false,
-      roll_list: None,
-    };
+    PoolRollOutput { hits_total: 0, is_glitch: false, roll_list: None }
   } else {
     let gen: &mut PCG32 = &mut global_gen();
     let mut dice_record: Vec<u8> = vec![];
@@ -52,11 +48,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
     PoolRollOutput {
       hits_total: hits,
       is_glitch: ones >= (pool_size + 1) / 2,
-      roll_list: if dice_record.len() > 0 {
-        Some(dice_record)
-      } else {
-        None
-      },
+      roll_list: if dice_record.is_empty() { None } else { Some(dice_record) },
     }
   }
 }
@@ -101,37 +93,50 @@ macro_rules! do_the_dice_pool {
   }};
 }
 
-command!(shadowrun(_ctx, msg, args) {
+pub fn shadowrun(args: &str) -> String {
   let mut output = String::new();
-  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
-    format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, false, "dice"));
+  for dice_count in args.split_whitespace().take(10).filter_map(basic_sum_str) {
+    format_the_dice_report!(
+      output,
+      do_the_dice_pool!(output, "Rolled", dice_count, false, "dice")
+    );
     output.push('\n');
   }
   output.pop();
-  if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
-      println!("Error sending message: {:?}", why);
-    }
+  if output.is_empty() {
+    String::from("No dice expressions given.")
+  } else {
+    output
   }
-});
+}
 
-command!(shadowrun_edge(_ctx, msg, args) {
+pub fn shadowrun_edge(args: &str) -> String {
   let mut output = String::new();
-  for dice_count in args.full().split_whitespace().take(10).filter_map(basic_sum_str) {
-    format_the_dice_report!(output, do_the_dice_pool!(output, "Rolled", dice_count, true, "dice with edge (6-again)"));
+  for dice_count in args.split_whitespace().take(10).filter_map(basic_sum_str) {
+    format_the_dice_report!(
+      output,
+      do_the_dice_pool!(
+        output,
+        "Rolled",
+        dice_count,
+        true,
+        "dice with edge (6-again)"
+      )
+    );
     output.push('\n');
   }
   output.pop();
-  if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
-      println!("Error sending message: {:?}", why);
-    }
+  if output.is_empty() {
+    String::from("No dice expressions given.")
+  } else {
+    output
   }
-});
+}
 
-command!(shadowrun_friend(_ctx, msg, args) {
+pub fn shadowrun_friend(args: &str) -> String {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> =
+    args.split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [conjure, force, soak] => {
       let conjure = *conjure;
@@ -142,26 +147,44 @@ command!(shadowrun_friend(_ctx, msg, args) {
       } else if force < 1 {
         output.push_str("There's no Force there!")
       } else {
-        let conjure_output = do_the_dice_pool!(output, "You rolled", conjure, false, "dice to conjure");
+        let conjure_output = do_the_dice_pool!(
+          output,
+          "You rolled",
+          conjure,
+          false,
+          "dice to conjure"
+        );
         {
           format_the_dice_report!(output, conjure_output);
           output.push('\n');
         }
         let conjure_hits = conjure_output.hits_total;
         //
-        let force_output = do_the_dice_pool!(output, "Your friend rolled", force, false, "dice to resist");
+        let force_output = do_the_dice_pool!(
+          output,
+          "Your friend rolled",
+          force,
+          false,
+          "dice to resist"
+        );
         {
-          let services_owed = (conjure_hits as i32 - force_output.hits_total as i32).max(0);
+          let services_owed =
+            (conjure_hits as i32 - force_output.hits_total as i32).max(0);
           let s_for_services_owed = if services_owed != 1 { "s" } else { "" };
-          output.push_str(&format!(" ({} service{} owed)", services_owed, s_for_services_owed));
+          output.push_str(&format!(
+            " ({} service{} owed)",
+            services_owed, s_for_services_owed
+          ));
           format_the_dice_report!(output, force_output);
           output.push('\n');
         }
         let force_hits = force_output.hits_total as i32;
         //
-        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
+        let soak_output =
+          do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
-          let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
+          let net_drain =
+            ((force / 2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
           format_the_dice_report!(output, soak_output);
         }
@@ -171,14 +194,13 @@ command!(shadowrun_friend(_ctx, msg, args) {
       output.push_str("Usage: CONJURE FORCE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
-    println!("Error sending message: {:?}", why);
-  }
-});
+  output
+}
 
-command!(shadowrun_foe(_ctx, msg, args) {
+pub fn shadowrun_foe(args: &str) -> String {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> =
+    args.split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [bind, force, soak] => {
       let bind = *bind;
@@ -189,31 +211,45 @@ command!(shadowrun_foe(_ctx, msg, args) {
       } else if force < 1 {
         output.push_str("There's no Force there!")
       } else {
-        let bind_output = do_the_dice_pool!(output, "You rolled", bind, false, "dice to bind");
+        let bind_output =
+          do_the_dice_pool!(output, "You rolled", bind, false, "dice to bind");
         {
           format_the_dice_report!(output, bind_output);
           output.push('\n');
         }
         let bind_hits = bind_output.hits_total;
         //
-        let force_dice = force*2;
-        let force_output = do_the_dice_pool!(output, "Your victim rolled", force_dice, false, "dice to resist");
+        let force_dice = force * 2;
+        let force_output = do_the_dice_pool!(
+          output,
+          "Your victim rolled",
+          force_dice,
+          false,
+          "dice to resist"
+        );
         {
-          let binding_net_hits = (bind_hits as i32 - force_output.hits_total as i32).max(0);
+          let binding_net_hits =
+            (bind_hits as i32 - force_output.hits_total as i32).max(0);
           if binding_net_hits == 0 {
             output.push_str(" (failed to bind!)\n");
           } else {
-            let s_for_binding_net_hits = if binding_net_hits > 1 { "s" } else { "" };
-            output.push_str(&format!(" ({} net hit{})", binding_net_hits, s_for_binding_net_hits));
+            let s_for_binding_net_hits =
+              if binding_net_hits > 1 { "s" } else { "" };
+            output.push_str(&format!(
+              " ({} net hit{})",
+              binding_net_hits, s_for_binding_net_hits
+            ));
             format_the_dice_report!(output, force_output);
             output.push('\n');
           }
         }
         let force_hits = force_output.hits_total as i32;
         //
-        let soak_output = do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
+        let soak_output =
+          do_the_dice_pool!(output, "Your rolled", soak, false, "dice to soak");
         {
-          let net_drain = ((force/2 + force_hits) - soak_output.hits_total as i32).max(0);
+          let net_drain =
+            ((force / 2 + force_hits) - soak_output.hits_total as i32).max(0);
           output.push_str(&format!(" ({} net drain)", net_drain));
           format_the_dice_report!(output, soak_output);
         }
@@ -223,14 +259,13 @@ command!(shadowrun_foe(_ctx, msg, args) {
       output.push_str("Usage: CONJURE FORCE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
-    println!("Error sending message: {:?}", why);
-  }
-});
+  output
+}
 
-command!(shadowrun_attack(_ctx, msg, args) {
+pub fn shadowrun_attack(args: &str) -> String {
   let mut output = String::new();
-  let terms: Vec<i32> = args.full().split_whitespace().filter_map(basic_sum_str).collect();
+  let terms: Vec<i32> =
+    args.split_whitespace().filter_map(basic_sum_str).collect();
   match &terms as &[i32] {
     [attack, evade, damage, soak] => {
       if *attack < 1 {
@@ -241,14 +276,26 @@ command!(shadowrun_attack(_ctx, msg, args) {
         let damage = *damage as u32;
         let soak = (*soak).max(0) as u32;
         //
-        let attack_output = do_the_dice_pool!(output, "You rolled", attack, false, "dice to attack");
+        let attack_output = do_the_dice_pool!(
+          output,
+          "You rolled",
+          attack,
+          false,
+          "dice to attack"
+        );
         {
           format_the_dice_report!(output, attack_output);
           output.push('\n');
         }
         let attack_hits = attack_output.hits_total;
         //
-        let evade_output = do_the_dice_pool!(output, "They rolled", evade, false, "dice to evade");
+        let evade_output = do_the_dice_pool!(
+          output,
+          "They rolled",
+          evade,
+          false,
+          "dice to evade"
+        );
         let evade_hits = evade_output.hits_total;
         let attack_net_hits = attack_hits as i32 - evade_hits as i32;
         if attack_net_hits < 0 {
@@ -260,14 +307,25 @@ command!(shadowrun_attack(_ctx, msg, args) {
         } else {
           let s_for_net_hits = if attack_net_hits != 1 { "s" } else { "" };
           let modified_damage = damage as i32 + attack_net_hits;
-          output.push_str(&format!(" ({} net hit{}, modified damage is {})",attack_net_hits, s_for_net_hits, modified_damage));
+          output.push_str(&format!(
+            " ({} net hit{}, modified damage is {})",
+            attack_net_hits, s_for_net_hits, modified_damage
+          ));
           format_the_dice_report!(output, evade_output);
           output.push('\n');
           //
-          let soak_output = do_the_dice_pool!(output, "They rolled", soak, false, "dice to soak");
+          let soak_output = do_the_dice_pool!(
+            output,
+            "They rolled",
+            soak,
+            false,
+            "dice to soak"
+          );
           {
-            let damage_after_soak = (modified_damage - soak_output.hits_total as i32).max(0);
-            output.push_str(&format!(" ({} damage after soak)",damage_after_soak));
+            let damage_after_soak =
+              (modified_damage - soak_output.hits_total as i32).max(0);
+            output
+              .push_str(&format!(" ({} damage after soak)", damage_after_soak));
             format_the_dice_report!(output, soak_output);
             output.push('\n');
           }
@@ -278,7 +336,5 @@ command!(shadowrun_attack(_ctx, msg, args) {
       output.push_str("Usage: ATTACK EVADE DAMAGE SOAK");
     }
   }
-  if let Err(why) = msg.channel_id.say(output) {
-    println!("Error sending message: {:?}", why);
-  }
-});
+  output
+}

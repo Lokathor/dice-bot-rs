@@ -14,25 +14,25 @@ pub enum Symbol {
 use self::Symbol::*;
 
 // goods
-static BLANK: &'static [Symbol] = &[];
-static TWO_ADVANTAGE: &'static [Symbol] = &[Advantage, Advantage];
-static ONE_ADVANTAGE: &'static [Symbol] = &[Advantage];
-static ADVANTAGE_SUCCESS: &'static [Symbol] = &[Advantage, Success];
-static ONE_SUCCESS: &'static [Symbol] = &[Success];
-static TWO_SUCCESS: &'static [Symbol] = &[Success, Success];
-static THE_TRIUMPH: &'static [Symbol] = &[Success, Triumph];
+static BLANK: &[Symbol] = &[];
+static TWO_ADVANTAGE: &[Symbol] = &[Advantage, Advantage];
+static ONE_ADVANTAGE: &[Symbol] = &[Advantage];
+static ADVANTAGE_SUCCESS: &[Symbol] = &[Advantage, Success];
+static ONE_SUCCESS: &[Symbol] = &[Success];
+static TWO_SUCCESS: &[Symbol] = &[Success, Success];
+static THE_TRIUMPH: &[Symbol] = &[Success, Triumph];
 // bads
-static ONE_DISADVANTAGE: &'static [Symbol] = &[Disadvantage];
-static TWO_DISADVANTAGE: &'static [Symbol] = &[Disadvantage, Disadvantage];
-static ONE_FAILURE: &'static [Symbol] = &[Failure];
-static TWO_FAILURE: &'static [Symbol] = &[Failure, Failure];
-static DISADVANTAGE_FAILURE: &'static [Symbol] = &[Disadvantage, Failure];
-static THE_DESPAIR: &'static [Symbol] = &[Failure, Despair];
+static ONE_DISADVANTAGE: &[Symbol] = &[Disadvantage];
+static TWO_DISADVANTAGE: &[Symbol] = &[Disadvantage, Disadvantage];
+static ONE_FAILURE: &[Symbol] = &[Failure];
+static TWO_FAILURE: &[Symbol] = &[Failure, Failure];
+static DISADVANTAGE_FAILURE: &[Symbol] = &[Disadvantage, Failure];
+static THE_DESPAIR: &[Symbol] = &[Failure, Despair];
 // force
-static ONE_DARK: &'static [Symbol] = &[Dark];
-static TWO_DARK: &'static [Symbol] = &[Dark, Dark];
-static ONE_LIGHT: &'static [Symbol] = &[Light];
-static TWO_LIGHT: &'static [Symbol] = &[Light, Light];
+static ONE_DARK: &[Symbol] = &[Dark];
+static TWO_DARK: &[Symbol] = &[Dark, Dark];
+static ONE_LIGHT: &[Symbol] = &[Light];
+static TWO_LIGHT: &[Symbol] = &[Light, Light];
 
 fn blue(gen: &mut PCG32) -> &'static [Symbol] {
   match d6.sample(gen) {
@@ -114,10 +114,10 @@ fn white(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-command!(eote(_ctx, msg, args) {
+pub fn eote(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  let terms: Vec<&str> = args.full().split_whitespace().collect();
+  let terms: Vec<&str> = args.split_whitespace().collect();
   'termloop: for term in terms {
     let mut pool_string = String::new();
     for ch in term.chars() {
@@ -160,18 +160,18 @@ command!(eote(_ctx, msg, args) {
           Light => lights += 1,
           Dark => darks += 1,
         }
-      };
+      }
     }
     let mut symbol_total_string = String::new();
     if successes > 0 {
-      symbol_total_string.push_str(&format!("{} Success",successes));
+      symbol_total_string.push_str(&format!("{} Success", successes));
       if successes > 1 {
         symbol_total_string.push_str("es, ");
       } else {
         symbol_total_string.push_str(", ");
       }
     } else if successes < 0 {
-      symbol_total_string.push_str(&format!("{} Failure",successes.abs()));
+      symbol_total_string.push_str(&format!("{} Failure", successes.abs()));
       if successes < -1 {
         symbol_total_string.push_str("s, ");
       } else {
@@ -181,23 +181,29 @@ command!(eote(_ctx, msg, args) {
       symbol_total_string.push_str("0 Failures, ");
     }
     if advantages > 0 {
-      symbol_total_string.push_str(&format!("{} Advantage",advantages));
+      symbol_total_string.push_str(&format!("{} Advantage", advantages));
       if advantages > 1 {
         symbol_total_string.push_str("s, ");
       } else {
         symbol_total_string.push_str(", ");
       }
     } else if advantages < 0 {
-      symbol_total_string.push_str(&format!("{} Disadvantage",advantages.abs()));
+      symbol_total_string
+        .push_str(&format!("{} Disadvantage", advantages.abs()));
       if advantages < -1 {
         symbol_total_string.push_str("s, ");
       } else {
         symbol_total_string.push_str(", ");
       }
     }
-    for (quantity, symbol) in &[(triumphs, Triumph), (despairs, Despair), (lights, Light), (darks, Dark)] {
+    for (quantity, symbol) in &[
+      (triumphs, Triumph),
+      (despairs, Despair),
+      (lights, Light),
+      (darks, Dark),
+    ] {
       if *quantity > 0 {
-        symbol_total_string.push_str(&format!("{} {:?}",quantity, symbol));
+        symbol_total_string.push_str(&format!("{} {:?}", quantity, symbol));
         if *quantity > 1 {
           symbol_total_string.push_str("s, ");
         } else {
@@ -205,19 +211,16 @@ command!(eote(_ctx, msg, args) {
         }
       }
     }
-    for _ in 0 .. 2 {
+    for _ in 0..2 {
       symbol_total_string.pop();
     }
-    output.push_str(&format!("Rolled {}: {}\n", pool_string, symbol_total_string));
+    writeln!(output, "Rolled {}: {}", pool_string, symbol_total_string)
+      .unwrap();
   }
   output.pop();
-  if output.len() > 0 {
-    if let Err(why) = msg.channel_id.say(output) {
-      println!("Error sending message: {:?}", why);
-    }
+  if output.is_empty() {
+    String::from("No dice expressions given.")
   } else {
-    if let Err(why) = msg.channel_id.say("usage: eote POOL (black = b, blue = u)") {
-      println!("Error sending message: {:?}", why);
-    }
+    output
   }
-});
+}

@@ -1,29 +1,43 @@
-use core::fmt::Write;
-use core::ops::Not;
+#![allow(non_upper_case_globals)]
+#![allow(clippy::comparison_chain)]
+
+use core::{fmt::Write, ops::Not};
 
 use randomize::{RandRangeU32, PCG32};
 
-mod dice;
-use dice::dice;
+mod after_sundown;
+use after_sundown::after_sundown;
 
 mod champions;
 use champions::champions;
 
-mod stat2e;
-use stat2e::stat2e;
+mod dice;
+use dice::dice;
+
+mod earthdawn;
+use earthdawn::{earthdawn, earthdawn_karma, earthdawn_target};
+
+mod eote;
+use eote::eote;
 
 mod global_gen;
 use global_gen::global_gen;
 
-/*
+mod shadowrun;
+use shadowrun::{
+  shadowrun, shadowrun_attack, shadowrun_edge, shadowrun_foe, shadowrun_friend,
+};
 
-TODO:
-* Dice Pools: sr / sre / sra / friend / foe / as
-* Steps: ed / edk / edt
-* Standard: thaco / taco / eote / champ / stat2e
-* Weirdness: sigil
+mod stat2e;
+use stat2e::stat2e;
 
-*/
+mod sigil;
+use sigil::sigil;
+
+mod thaco;
+use thaco::thaco;
+
+// // //
 
 const d4: RandRangeU32 = RandRangeU32::new(1, 4);
 const d6: RandRangeU32 = RandRangeU32::new(1, 6);
@@ -32,15 +46,57 @@ const d10: RandRangeU32 = RandRangeU32::new(1, 10);
 const d12: RandRangeU32 = RandRangeU32::new(1, 12);
 const d20: RandRangeU32 = RandRangeU32::new(1, 20);
 
-pub fn bot_handle_this(message: &str) -> Option<String> {
-  if message.starts_with(",dice") || message.starts_with(",roll") {
-    return Some(dice(message[5..].trim()));
-  } else if message.starts_with(",champ") {
-    return Some(champions(message[6..].trim()));
-  } else if message.starts_with(",stat2e") {
-    return Some(stat2e());
+trait ExplodingRange {
+  fn explode(&self, gen: &mut PCG32) -> u32;
+}
+
+impl ExplodingRange for RandRangeU32 {
+  fn explode(&self, gen: &mut PCG32) -> u32 {
+    let mut times = 0;
+    loop {
+      let roll = self.sample(gen);
+      if roll == self.high() {
+        times += 1;
+        continue;
+      } else {
+        return self.high() * times + roll;
+      }
+    }
   }
-  None
+}
+
+pub fn bot_handle_this(message: &str) -> Option<String> {
+  // remove this if we decide to have more than one prefix
+  if message.starts_with(',').not() {
+    return None;
+  }
+
+  let (cmd, args) = message
+    .find(char::is_whitespace)
+    .map(|index| {
+      let (c, a) = message.split_at(index);
+      (c, a.trim())
+    })
+    .unwrap_or((message, ""));
+
+  Some(match cmd {
+    ",dice" | ",roll" => dice(args),
+    ",thaco" | ",taco" => thaco(args),
+    ",champ" => champions(args),
+    ",stat2e" => stat2e(),
+    ",sigil" => sigil(args),
+    ",as" => after_sundown(args),
+    ",eote" => eote(args),
+    ",ed" => earthdawn(args),
+    ",edk" => earthdawn_karma(args),
+    ",edt" => earthdawn_target(args),
+    ",sr" => shadowrun(args),
+    ",sre" => shadowrun_edge(args),
+    ",sra" => shadowrun_attack(args),
+    ",friend" => shadowrun_friend(args),
+    ",foe" => shadowrun_foe(args),
+    _ => return None,
+  })
 }
 
 fn basic_sum_str(s: &str) -> Option<i32> {

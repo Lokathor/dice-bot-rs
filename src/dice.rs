@@ -76,7 +76,7 @@ pub fn dice(args: &str) -> String {
             }
             sub_expressions.push(format!("{}d{}", num_dice, num_sides));
           }
-          _ => ()
+          _ => (),
         }
       }
     }
