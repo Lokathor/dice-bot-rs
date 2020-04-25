@@ -14,6 +14,9 @@ use champions::champions;
 mod dice;
 use dice::dice;
 
+mod drag_init;
+use drag_init::drag_init;
+
 mod earthdawn;
 use earthdawn::{earthdawn, earthdawn_karma, earthdawn_target};
 
@@ -95,6 +98,7 @@ pub fn bot_handle_this(message: &str) -> Option<String> {
     ",sra" => shadowrun_attack(args),
     ",friend" => shadowrun_friend(args),
     ",foe" => shadowrun_foe(args),
+    ",draginit" => drag_init(args),
     _ => return None,
   })
 }
