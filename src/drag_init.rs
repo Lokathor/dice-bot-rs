@@ -9,7 +9,7 @@ use core::cmp::Ordering;
 /// * Rolls an init roll for each and then sorts the lines and prints
 pub fn drag_init(args: &str) -> String {
   const BASE_CREATURES: &[&str] =
-    &["-1/Freya(A)", "-1/Goji(V)", "+3/Jasmal(S)", "+4/Sardukar(D)"];
+    &["-1/FreyaII(A)", "-1/Goji(V)", "+3/Jasmal(S)", "+4/R-66Y(D)"];
   #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
   struct OutLine {
     roll: i32,
