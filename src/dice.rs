@@ -2,7 +2,7 @@ use super::*;
 
 use core::cmp::Ordering;
 
-/// Rolls XdY style dice
+/// Rolls `XdY` style dice
 ///
 /// * Input: whitespace-trimmed arg text after `,dice` or whatever command you
 ///   use to activate this.
@@ -10,7 +10,13 @@ use core::cmp::Ordering;
 pub fn dice(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
-  'exprloop: for dice_expression_str in args.split_whitespace().take(20) {
+  let mut lines = 0;
+  'exprloop: for dice_expression_str in args.split_whitespace() {
+    if lines >= 20 {
+      writeln!(output, "`Additional input skipped`", parsed_string, total)
+        .unwrap();
+      break;
+    }
     let plus_only_form = dice_expression_str.replace("-", "+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
@@ -91,6 +97,7 @@ pub fn dice(args: &str) -> String {
         }
       }
       writeln!(output, "Rolled {}: {}", parsed_string, total).unwrap();
+      lines += 1;
     } else {
       // pass
     }
