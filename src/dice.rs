@@ -13,8 +13,7 @@ pub fn dice(args: &str) -> String {
   let mut lines = 0;
   'exprloop: for dice_expression_str in args.split_whitespace() {
     if lines >= 20 {
-      writeln!(output, "`Additional input skipped`", parsed_string, total)
-        .unwrap();
+      writeln!(output, "`Additional input skipped`").unwrap();
       break;
     }
     let plus_only_form = dice_expression_str.replace("-", "+-");
