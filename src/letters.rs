@@ -5,11 +5,7 @@ const THE_LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LETTER_RANGE: RandRangeU32 =
   RandRangeU32::new(0, (THE_LETTERS.len() - 1) as _);
 
-/// Rolls DragonTown initiative
-///
-/// * Args: list of +bonus/name entries
-/// * The PC entries are implied
-/// * Rolls an init roll for each and then sorts the lines and prints
+/// Rolls some random English letters.
 pub fn letters(args: &str) -> String {
   let gen: &mut PCG32 = &mut global_gen();
   let mut output = String::new();
