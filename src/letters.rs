@@ -1,6 +1,6 @@
 use super::*;
 
-const THE_LETTERS: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
+const THE_LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const LETTER_RANGE: RandRangeU32 =
   RandRangeU32::new(0, (THE_LETTERS.len() - 1) as _);
@@ -16,7 +16,7 @@ pub fn letters(args: &str) -> String {
   //
   'exprloop: for exp in args.split_whitespace().take(20) {
     if let Ok(count) = exp.parse::<u8>() {
-      write!(output, "{} letters:", count).ok();
+      write!(output, "{} letters: ", count).ok();
       for _ in 0..count {
         output.push(THE_LETTERS[LETTER_RANGE.sample(gen) as usize] as char);
       }
