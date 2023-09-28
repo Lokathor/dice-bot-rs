@@ -7,24 +7,25 @@ use super::*;
 #[rustfmt::skip]
 const TNG_CHARACTERS: &[&str] =
   &[
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
   //
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
-  "Picard", "Riker", "Troi", "Geordi", "Worf", "Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
+  "Jean-Luc Picard", "William T. Riker", "Deanna Troi", "Geordi La Forge", "Worf", "Beverly Crusher", "Data",
   //
   "Random Red-shirt",
   "Random Gold-shirt", "Random Gold-shirt",
   "Random Blue-shirt",
   //
-  "Chancellor Gowron", "Alexander",
+  "Chancellor Gowron", "Alexander Rozhenko",
   "Lore",
   "Lwaxana Troi",
-  "Wesley",
+  "Wesley Crusher",
+  "Alynna Nechayev",
   ];
 
 #[rustfmt::skip]
