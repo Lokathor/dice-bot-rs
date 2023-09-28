@@ -1,20 +1,25 @@
 [package]
 name = "dice-bot"
-version = "0.6.2-alpha.0"
+version = "0.7.0"
 authors = ["Lokathor <zefria@gmail.com>"]
 repository = "https://github.com/Lokathor/dice-bot-rs"
 readme = "README.md"
-keywords = ["discord","dice"]
+keywords = ["discord", "dice"]
 description = "A discord bot to roll RPG dice rolls."
 license = "Zlib"
 publish = false
 edition = "2018"
 
 [dependencies]
-serenity = { version = "0.8", features = ["framework", "standard_framework"] }
-randomize = "3"
-getrandom = "0.1"
+serenity = { default-features = false, features = [
+  "client",
+  "gateway",
+  "rustls_backend",
+  "model",
+] }
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 bytemuck = "1"
+randomize = { version = "5.0.0", features = ["getrandom"] }
 
 [profile.release]
 lto = true

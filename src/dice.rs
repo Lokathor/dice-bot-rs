@@ -1,3 +1,7 @@
+use randomize::BoundedRandU32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
 use core::cmp::Ordering;
@@ -8,7 +12,7 @@ use core::cmp::Ordering;
 ///   use to activate this.
 /// * Output: The entire response message to show.
 pub fn dice(args: &str) -> String {
-  let gen: &mut PCG32 = &mut global_gen();
+  let gen: &mut GlobalGen = &mut global_gen();
   let mut output = String::new();
   let mut lines = 0;
   'exprloop: for dice_expression_str in args.split_whitespace() {
@@ -16,7 +20,7 @@ pub fn dice(args: &str) -> String {
       writeln!(output, "`Additional input skipped`").unwrap();
       break;
     }
-    let plus_only_form = dice_expression_str.replace("-", "+-");
+    let plus_only_form = dice_expression_str.replace('-', "+-");
     let mut total: i32 = 0;
     let mut sub_expressions = vec![];
     for sub_expression in plus_only_form.split('+').take(70) {
@@ -60,24 +64,24 @@ pub fn dice(args: &str) -> String {
         sub_expressions.push(format!("{}", num_dice));
       } else {
         let range = match num_sides {
-          4 => d4,
-          6 => d6,
-          8 => d8,
-          10 => d10,
-          12 => d12,
-          20 => d20,
-          _ => RandRangeU32::new(1, num_sides),
+          4 => BoundedRandU32::_4,
+          6 => BoundedRandU32::_6,
+          8 => BoundedRandU32::_8,
+          10 => BoundedRandU32::_10,
+          12 => BoundedRandU32::_12,
+          20 => BoundedRandU32::_20,
+          _ => BoundedRandU32::new(num_sides),
         };
         match num_dice.cmp(&0) {
           Ordering::Greater => {
             for _ in 0..num_dice {
-              total += range.sample(gen) as i32;
+              total += 1 + range.sample(|| gen.next_u32()) as i32;
             }
             sub_expressions.push(format!("{}d{}", num_dice, num_sides));
           }
           Ordering::Less => {
             for _ in 0..num_dice.abs() {
-              total -= range.sample(gen) as i32;
+              total -= 1 + range.sample(|| gen.next_u32()) as i32;
             }
             sub_expressions.push(format!("{}d{}", num_dice, num_sides));
           }

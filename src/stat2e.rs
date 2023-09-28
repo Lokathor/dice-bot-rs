@@ -1,14 +1,17 @@
+use randomize::Gen32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
-/// Rolls 4d4+4 dix times.
+/// Rolls 4d4+4 six times.
 ///
 /// * Output: The entire response message to show.
 pub fn stat2e() -> String {
-  let gen: &mut PCG32 = &mut global_gen();
+  let gen: &mut GlobalGen = &mut global_gen();
   let mut output = String::new();
-  let roll = |gen: &mut PCG32| {
-    4 + d4.sample(gen) + d4.sample(gen) + d4.sample(gen) + d4.sample(gen)
-  };
+  let roll =
+    |gen: &mut GlobalGen| 4 + gen.d4() + gen.d4() + gen.d4() + gen.d4();
   writeln!(output, "Str: {}", roll(gen)).unwrap();
   writeln!(output, "Dex: {}", roll(gen)).unwrap();
   writeln!(output, "Con: {}", roll(gen)).unwrap();

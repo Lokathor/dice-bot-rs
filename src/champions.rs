@@ -1,3 +1,7 @@
+use randomize::Gen32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
 /// For the champions game I guess?
@@ -7,14 +11,14 @@ use super::*;
 /// * Input: whitespace-trimmed arg text
 /// * Output: The entire response message to show.
 pub fn champions(args: &str) -> String {
-  let gen: &mut PCG32 = &mut global_gen();
+  let gen: &mut GlobalGen = &mut global_gen();
   let mut output = String::new();
   let terms: Vec<i32> =
     args.split_whitespace().filter_map(basic_sum_str).collect();
   for term in terms {
     let mut rolls = [0; 3];
     for roll_mut in rolls.iter_mut() {
-      *roll_mut = d6.sample(gen) as i32;
+      *roll_mut = gen.d6();
     }
     writeln!(
       output,

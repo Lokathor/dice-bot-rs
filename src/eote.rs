@@ -1,3 +1,7 @@
+use randomize::Gen32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -34,8 +38,8 @@ static TWO_DARK: &[Symbol] = &[Dark, Dark];
 static ONE_LIGHT: &[Symbol] = &[Light];
 static TWO_LIGHT: &[Symbol] = &[Light, Light];
 
-fn blue(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample(gen) {
+fn blue(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d6() {
     1 | 2 => BLANK,
     3 => TWO_ADVANTAGE,
     4 => ONE_ADVANTAGE,
@@ -45,8 +49,8 @@ fn blue(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-fn black(gen: &mut PCG32) -> &'static [Symbol] {
-  match d6.sample(gen) {
+fn black(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d6() {
     1 | 2 => BLANK,
     3 | 4 => ONE_FAILURE,
     5 | 6 => ONE_DISADVANTAGE,
@@ -54,8 +58,8 @@ fn black(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-fn green(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample(gen) {
+fn green(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d8() {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 => TWO_SUCCESS,
@@ -66,33 +70,33 @@ fn green(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-fn purple(gen: &mut PCG32) -> &'static [Symbol] {
-  match d8.sample(gen) {
+fn purple(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d8() {
     1 => BLANK,
     2 => ONE_FAILURE,
     3 => TWO_FAILURE,
-    4 | 5 | 6 => ONE_DISADVANTAGE,
+    4..=6 => ONE_DISADVANTAGE,
     7 => TWO_DISADVANTAGE,
     8 => DISADVANTAGE_FAILURE,
     _ => unreachable!(),
   }
 }
 
-fn yellow(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
+fn yellow(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d12() {
     1 => BLANK,
     2 | 3 => ONE_SUCCESS,
     4 | 5 => TWO_SUCCESS,
     6 => ONE_ADVANTAGE,
-    7 | 8 | 9 => ADVANTAGE_SUCCESS,
+    7..=9 => ADVANTAGE_SUCCESS,
     10 | 11 => TWO_ADVANTAGE,
     12 => THE_TRIUMPH,
     _ => unreachable!(),
   }
 }
 
-fn red(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
+fn red(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d12() {
     1 => BLANK,
     2 | 3 => ONE_FAILURE,
     4 | 5 => TWO_FAILURE,
@@ -104,18 +108,18 @@ fn red(gen: &mut PCG32) -> &'static [Symbol] {
   }
 }
 
-fn white(gen: &mut PCG32) -> &'static [Symbol] {
-  match d12.sample(gen) {
-    1 | 2 | 3 | 4 | 5 | 6 => ONE_DARK,
+fn white(gen: &mut GlobalGen) -> &'static [Symbol] {
+  match gen.d12() {
+    1..=6 => ONE_DARK,
     7 => TWO_DARK,
     8 | 9 => ONE_LIGHT,
-    10 | 11 | 12 => TWO_LIGHT,
+    10..=12 => TWO_LIGHT,
     _ => unreachable!(),
   }
 }
 
 pub fn eote(args: &str) -> String {
-  let gen: &mut PCG32 = &mut global_gen();
+  let gen: &mut GlobalGen = &mut global_gen();
   let mut output = String::new();
   let terms: Vec<&str> = args.split_whitespace().collect();
   'termloop: for term in terms {

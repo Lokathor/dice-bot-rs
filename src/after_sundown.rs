@@ -1,7 +1,11 @@
+use randomize::Gen32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
 pub fn after_sundown(args: &str) -> String {
-  let gen: &mut PCG32 = &mut global_gen();
+  let gen: &mut GlobalGen = &mut global_gen();
   let mut output = String::new();
   for dice_count in args.split_whitespace().flat_map(basic_sum_str).take(10) {
     let dice_count = dice_count.max(0).min(5_000) as u32;
@@ -12,7 +16,7 @@ pub fn after_sundown(args: &str) -> String {
         String::with_capacity(DICE_REPORT_MAXIMUM as usize * 2 + 20);
       dice_record.push_str(" `(");
       for _ in 0..dice_count {
-        let roll = d6.sample(gen);
+        let roll = gen.d6();
         if roll >= 5 {
           hits += 1;
         }

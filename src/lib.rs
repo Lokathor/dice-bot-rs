@@ -4,8 +4,6 @@
 
 use core::{fmt::Write, ops::Not};
 
-use randomize::{RandRangeU32, PCG32};
-
 mod after_sundown;
 use after_sundown::after_sundown;
 
@@ -14,6 +12,9 @@ use champions::champions;
 
 mod dice;
 use dice::dice;
+
+mod trek;
+use trek::trek;
 
 mod letters;
 use letters::letters;
@@ -42,32 +43,6 @@ mod thaco;
 use thaco::thaco;
 
 // // //
-
-const d4: RandRangeU32 = RandRangeU32::new(1, 4);
-const d6: RandRangeU32 = RandRangeU32::new(1, 6);
-const d8: RandRangeU32 = RandRangeU32::new(1, 8);
-const d10: RandRangeU32 = RandRangeU32::new(1, 10);
-const d12: RandRangeU32 = RandRangeU32::new(1, 12);
-const d20: RandRangeU32 = RandRangeU32::new(1, 20);
-
-trait ExplodingRange {
-  fn explode(&self, gen: &mut PCG32) -> u32;
-}
-
-impl ExplodingRange for RandRangeU32 {
-  fn explode(&self, gen: &mut PCG32) -> u32 {
-    let mut times = 0;
-    loop {
-      let roll = self.sample(gen);
-      if roll == self.high() {
-        times += 1;
-        continue;
-      } else {
-        return self.high() * times + roll;
-      }
-    }
-  }
-}
 
 pub fn bot_handle_this(message: &str) -> Option<String> {
   // remove this if we decide to have more than one prefix
@@ -100,6 +75,7 @@ pub fn bot_handle_this(message: &str) -> Option<String> {
     ",friend" => shadowrun_friend(args),
     ",foe" => shadowrun_foe(args),
     ",letters" => letters(args),
+    ",trek" => trek(args),
     _ => return None,
   })
 }

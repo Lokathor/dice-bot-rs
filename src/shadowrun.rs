@@ -1,3 +1,7 @@
+use randomize::Gen32;
+
+use crate::global_gen::GlobalGen;
+
 use super::*;
 
 const SR_POOL_MAX_REPORT: u32 = 30;
@@ -20,7 +24,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
   if pool_size == 0 {
     PoolRollOutput { hits_total: 0, is_glitch: false, roll_list: None }
   } else {
-    let gen: &mut PCG32 = &mut global_gen();
+    let gen: &mut GlobalGen = &mut global_gen();
     let mut dice_record: Vec<u8> = vec![];
     //
     let mut dice_rolled = 0;
@@ -28,7 +32,7 @@ pub fn sr4(pool_size: u32, six_again: bool) -> PoolRollOutput {
     let mut ones = 0;
     let mut this_is_a_normal_roll = true;
     while dice_rolled < pool_size {
-      let roll = d6.sample(gen);
+      let roll = gen.d6();
       if roll == 1 && this_is_a_normal_roll {
         ones += 1;
       } else if roll >= 5 {
