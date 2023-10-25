@@ -4,6 +4,10 @@ use crate::global_gen::GlobalGen;
 
 use super::*;
 
+// Note(Lokathor): Every element has equal chance of appearing, so we apply
+// some crude weighting of options by making the main characters appear
+// in the lists more than once.
+
 #[rustfmt::skip]
 const TNG_CHARACTERS: &[&str] =
   &[
@@ -45,6 +49,7 @@ const DS9_CHARACTERS: &[&str] =
   //
   "Jake Sisko", "Nog",
   "Keiko O'Brien",
+  "The Wormhole", "Bajor",
   ];
 
 pub fn trek(args: &str) -> String {
