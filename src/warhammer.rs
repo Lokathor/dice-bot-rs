@@ -35,12 +35,12 @@ pub fn warhammer(args: &str) -> String {
       }
       writeln!(
         output,
-        "=Rolling {term}:\
-      1) {one}\
-      2) {two}\
-      3) {three}\
-      4) {four}\
-      5) {five}\
+        "=Rolling {term}:\n\
+      1) {one}\n\
+      2) {two}\n\
+      3) {three}\n\
+      4) {four}\n\
+      5) {five}\n\
       6) {six}"
       )
       .ok();
