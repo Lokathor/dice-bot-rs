@@ -42,6 +42,9 @@ use sigil::sigil;
 mod thaco;
 use thaco::thaco;
 
+mod warhammer;
+use warhammer::warhammer;
+
 // // //
 
 pub fn bot_handle_this(message: &str) -> Option<String> {
@@ -76,6 +79,7 @@ pub fn bot_handle_this(message: &str) -> Option<String> {
     ",foe" => shadowrun_foe(args),
     ",letters" => letters(args),
     ",trek" => trek(args),
+    ",wh" => warhammer(args),
     _ => return None,
   })
 }
